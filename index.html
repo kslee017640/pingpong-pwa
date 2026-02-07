@@ -508,8 +508,8 @@
             const sRate = s.total > 0 ? Math.round((s.win/s.total)*100) : 0;
             const dbRate = db.total > 0 ? Math.round((db.win/db.total)*100) : 0;
             html += `<tr><td><b class="rank-name">${n}</b></td><td>${s.total + db.total}</td><td style="text-align:left; padding-left:10px;">
-                <span class="vs-detail">🏸 단식: <b>${s.win}</b>/${s.total}<span class="vs-detail-rate">(${sRate}%)</span></span>
-                <span class="vs-detail">👥 복식: <b>${db.win}</b>/${db.total}<span class="vs-detail-rate">(${dbRate}%)</span></span>
+                <span class="vs-detail">   🏓 단식: <b>${s.win}</b>/${s.total}<span class="vs-detail-rate">(${sRate}%)</span></span>
+                <span class="vs-detail">🏓🏓 복식: <b>${db.win}</b>/${db.total}<span class="vs-detail-rate">(${dbRate}%)</span></span>
             </td></tr>`;
         });
         document.getElementById('recordTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; padding:20px;'>기록 없음</p>";
@@ -571,4 +571,5 @@ if ("serviceWorker" in navigator) {
 </body>
 
 </html>
+
 
