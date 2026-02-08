@@ -2,10 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-
-      <link rel="manifest" href="manifest.json">
-
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PING-PONG DB PRO</title>
@@ -20,19 +18,18 @@
     <style>
         :root { --primary: #2e7d32; --secondary: #1976d2; --danger: #d32f2f; --bg: #f8f9fa; --card-bg: #ffffff; --btn-gray: #607d8b; }
         
-       /* 인트로 추가 시작 */
-       #intro-layer {
+        #intro-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 20000; 
             animation: fadeOut 0.5s forwards; animation-delay: 2.5s;
         }
-#intro-layer img {
+        #intro-layer img {
             width: 85%; max-width: 350px;
             opacity: 0;
             animation: fadeIn 0.5s forwards;
-            border-radius: 24px; /* 이 부분을 추가하세요. 숫자가 클수록 더 둥글어집니다. */
-            overflow: hidden;    /* 이미지가 영역 밖으로 나가지 않게 잡아줍니다. */
+            border-radius: 24px;
+            overflow: hidden;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
         }
         .intro-text {
@@ -46,27 +43,22 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
-        /* 인트로 끝 */
-
 
         body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.4; }
         .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .header-container { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; flex-direction: column; }
         .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
         
-        /* 버전 표시 스타일 */
         .version-tag { font-size: 10px; color: #ccc; font-weight: normal; margin-top: 3px; }
-        
         .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
 
-        /* 기존 로직과 스타일은 유지하고 .box의 그림자 효과만 강화했습니다 */
         .box { 
             background: var(--card-bg); 
             padding: 15px; 
             border-radius: 18px; 
             margin-bottom: 12px; 
-            border: 1px solid rgba(0,0,0,0.07); /* 선 */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); /* 그림자 추가 */
+            border: 1px solid rgba(0,0,0,0.07);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         }
         .flex-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
         .input-group { flex: 1; display: flex; flex-direction: column; }
@@ -89,16 +81,14 @@
         .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #2c3e50; color: white; padding: 15px; border-radius: 18px; margin: 12px 0; }
         .score-num { font-size: 2.5em; font-weight: 900; }
         
-        /* 대진표 카드에도 둥근 모서리와 그림자 효과 적용 */
         .match-card { 
             background: #fff; 
             border-radius: 14px; 
             padding: 12px; 
             margin-bottom: 10px; 
-            border: 1px solid rgba(0,0,0,0.07); /* 선  */
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5); /* 그림자 추가 */
+            border: 1px solid rgba(0,0,0,0.07);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
         }
-
 
         .match-btn-group { display: flex; gap: 8px; margin-top: 10px; }
         .match-btn-group button { padding: 8px; background: #f4f4f4; color: #555; }
@@ -140,6 +130,8 @@
         .team-label-a { color: var(--secondary); font-size: 13px; }
         .team-label-b { color: var(--danger); font-size: 13px; }
         .vs-divider { display: block; font-size: 11px; color: #bbb; margin: 2px 0; font-weight: normal; }
+
+        .money-input { width: 60px; text-align: right; padding: 4px; border-radius: 6px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -152,7 +144,7 @@
 <div id="loading">데이터 동기화 중...</div>
 <div class="container">
     <div class="header-container">
-        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.11</span></div>
+        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.2</span></div>
         <div class="header-subtitle">Designed by KS</div>
     </div>
     
@@ -204,7 +196,7 @@
     </div>
 
     <div class="box">
-        <h3 style="text-align:center; margin-top:0; font-size:15px; color:#444;">📊 랭킹 통계 (승률순)</h3>
+        <h3 style="text-align:center; margin-top:0; font-size:15px; color:#444;">📊 통계 및 랭킹</h3>
         <div class="period-btns">
             <button class="btn-p active" onclick="setQuickPeriod(0, this)">전체</button>
             <button class="btn-p" onclick="setQuickPeriod(1, this)">1개월</button>
@@ -215,7 +207,13 @@
             <div class="input-group"><label class="filter-label">시작일</label><input type="date" id="statsStart" onchange="updateUI()"></div>
             <div class="input-group"><label class="filter-label">종료일</label><input type="date" id="statsEnd" onchange="updateUI()"></div>
         </div>
+        
+        <h4 style="font-size:13px; border-left:3px solid var(--primary); padding-left:8px; margin:15px 0 5px 0;">🏆 승률 랭킹</h4>
         <div id="rankingTableArea"></div>
+        
+        <h4 style="font-size:13px; border-left:3px solid var(--danger); padding-left:8px; margin:25px 0 5px 0;">💸 게임비 기부 랭킹</h4>
+        <div id="moneyRankingTableArea"></div>
+
         <button class="btn-red" onclick="resetDatabase()">⚠️ 데이터 초기화</button>
     </div>
 </div>
@@ -241,10 +239,21 @@
     </div>
 </div>
 
+<div id="moneyInputModal" class="modal-overlay" onclick="closeClickOut(event, 'moneyInputModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-weight: 800; font-size: 16px;">💸 게임비 입력 (천원 단위)</span>
+            <span class="modal-close-x" onclick="closeModal('moneyInputModal')">×</span>
+        </div>
+        <div id="moneyInputList" style="margin-top:10px;"></div>
+        <button class="btn-blue" style="margin-top:15px;" onclick="saveMoneyAndFinish()">금액 저장 및 종료</button>
+    </div>
+</div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzTImCgYtXbc4yN3VSNahYj6MKi9c36GZkF7rt8ofkE8asQWd95deMk05D8rHJMc06v/exec"; 
     const fixedList = ["김기협", "김학기", "김현진", "이경상", "이명철", "이주항", "이준호", "이진행", "김용범", "이석현", "조커1", "조커2"];
-    let db = { matchHistory: {} };
+    let db = { matchHistory: {}, moneyHistory: [] }; 
     let currentMatchData = null;
     let currentBalanceMode = 'tight';
     let isAlreadySaved = false;
@@ -283,7 +292,11 @@
         try { 
             const response = await fetch(`${API_URL}?t=${Date.now()}`);
             const text = await response.text(); 
-            if(text && text !== "EMPTY") { db = JSON.parse(text); if(!db.matchHistory) db.matchHistory = {}; }
+            if(text && text !== "EMPTY") { 
+                db = JSON.parse(text); 
+                if(!db.matchHistory) db.matchHistory = {}; 
+                if(!db.moneyHistory) db.moneyHistory = []; 
+            }
             updateUI(); checkDateData();
         } catch(e) { console.error(e); }
     }
@@ -307,9 +320,17 @@
 
     function updateUI() {
         if(!db.matchHistory) return;
-        let stats = {}; fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+        let stats = {}; 
+        let moneyStats = {}; // {이름: {money: 0, loses: 0}}
+        fixedList.forEach(n => {
+            stats[n] = { win: 0, total: 0 };
+            moneyStats[n] = { money: 0, loses: 0 };
+        });
+
         const start = document.getElementById('statsStart').value;
         const end = document.getElementById('statsEnd').value;
+
+        // 승률 통계 및 패배수 계산
         Object.keys(db.matchHistory).forEach(key => {
             const dStr = key.substring(0, 10);
             if((start && dStr < start) || (end && dStr > end)) return;
@@ -318,15 +339,36 @@
                 const res = m.results[l.id]; if(!res) return;
                 const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
                 win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                lose.forEach(p => { if(stats[p]) stats[p].total++; });
+                lose.forEach(p => { 
+                    if(stats[p]) stats[p].total++; 
+                    if(moneyStats[p]) moneyStats[p].loses++;
+                });
             });
         });
+
+        // 게임비 통계 (누적 기부액)
+        if(db.moneyHistory) {
+            db.moneyHistory.forEach(entry => {
+                if((start && entry.date < start) || (end && entry.date > end)) return;
+                if(moneyStats[entry.name]) moneyStats[entry.name].money += entry.amount;
+            });
+        }
+
+        // 승률 랭킹 출력
         let sorted = Object.entries(stats).filter(x=>x[1].total>0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
         let html = `<table><tr><th>순위</th><th>이름</th><th>게임</th><th>승</th><th>승률</th></tr>`;
         sorted.forEach(([n, d], i) => { 
             html += `<tr><td class="rank-num">${i+1}</td><td><b class="clickable-name rank-name" onclick="showVersusStats('${n}')">${n}</b></td><td>${d.total}</td><td>${d.win}</td><td><b class="rank-winrate" style="color:var(--primary)">${((d.win/d.total)*100).toFixed(1)}%</b></td></tr>`; 
         });
-        document.getElementById('rankingTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center;'>기록 없음</p>";
+        document.getElementById('rankingTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기록 없음</p>";
+
+        // 게임비 랭킹 출력
+        let mSorted = Object.entries(moneyStats).filter(x => x[1].money > 0 || x[1].loses > 0).sort((a,b) => b[1].money - a[1].money);
+        let mHtml = `<table><tr><th>순위</th><th>이름</th><th>패배수</th><th>기부액</th></tr>`;
+        mSorted.forEach(([n, d], i) => {
+            mHtml += `<tr><td class="rank-num">${i+1}</td><td class="rank-name">${n}</td><td>${d.loses}회</td><td><b style="color:#d32f2f;">${d.money.toLocaleString()},000원</b></td></tr>`;
+        });
+        document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
     }
 
     function showVersusStats(name) {
@@ -357,10 +399,10 @@
         let sorted = Object.entries(vsStats).sort((a,b) => (b[1].singles.total + b[1].doubles.total) - (a[1].singles.total + a[1].doubles.total));
         let html = `<table><tr><th>상대</th><th>총 게임</th><th>상세 전적 (승/전)</th></tr>`;
         sorted.forEach(([n, d]) => {
-            const s = d.singles, db = d.doubles;
-            html += `<tr><td><b class="rank-name">${n}</b></td><td>${s.total + db.total}</td><td style="text-align:left; padding-left:10px;">
+            const s = d.singles, dbData = d.doubles;
+            html += `<tr><td><b class="rank-name">${n}</b></td><td>${s.total + dbData.total}</td><td style="text-align:left; padding-left:10px;">
                 <span class="vs-detail">🏓👤 단식: <b>${s.win}</b>/${s.total}<span class="vs-detail-rate">(${s.total?Math.round(s.win/s.total*100):0}%)</span></span>
-                <span class="vs-detail">🏓🏓 복식: <b>${db.win}</b>/${db.total}<span class="vs-detail-rate">(${db.total?Math.round(db.win/db.total*100):0}%)</span></span>
+                <span class="vs-detail">🏓🏓 복식: <b>${dbData.win}</b>/${dbData.total}<span class="vs-detail-rate">(${dbData.total?Math.round(dbData.win/dbData.total*100):0}%)</span></span>
             </td></tr>`;
         });
         document.getElementById('recordTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; padding:20px;'>기록 없음</p>";
@@ -374,78 +416,181 @@
         updateUI();
     }
 
-     function handleSmartStart() {
+    function handleSmartStart() {
         const d = document.getElementById('matchDate').value;
         const t = document.getElementById('matchTime').value;
         const s = document.getElementById('matchSession').value;
         const key = `${d}_${t}_s${s}`;
         
         if (db.matchHistory && db.matchHistory[key]) {
-            // 이미 데이터가 있는 회차에서 '새 대진표 생성'을 누를 경우
+            // 빈 회차 찾기
             let nextS = -1;
-            for (let i = 1; i <= 10; i++) { if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; } }
+            for (let i = 1; i <= 10; i++) {
+                if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; }
+            }
             
-            if (confirm(`해당 회차는 이미 기록이 있습니다.\n기록을 무시하고 현재 회차에 '새 대진표'를 만드시겠습니까?\n(저장 시 덮어씌우기 확인 팝업이 뜹니다)`)) {
-                // 이 부분을 false로 만들지 않고 true로 유지하여 저장 시 팝업이 뜨게 함
-                isAlreadySaved = true; 
-                startMatching();
-            } else if (nextS !== -1 && confirm(`기록되지 않은 다음 회차(${nextS}회차)로 생성할까요?`)) {
-                document.getElementById('matchSession').value = nextS; 
-                isAlreadySaved = false; 
-                startMatching();
+            // 1. 다음 빈 회차 제안 (먼저 물어봄)
+            if (nextS !== -1) {
+                if (confirm(`현재 ${s}회차는 이미 기록이 있습니다.\n다음 빈 회차(${nextS}회차)로 이동하여 대진표를 생성하시겠습니까?`)) {
+                    document.getElementById('matchSession').value = nextS;
+                    isAlreadySaved = false;
+                    checkDateData(); 
+                    startMatching();
+                    return;
+                }
+            }
+
+            // 2. 덮어씌우기 더블 체크 (위에서 거절했을 때)
+            if (confirm(`현재 회차(${s}회차)의 기록을 덮어씌우시겠습니까?`)) {
+                if (confirm(`⚠️ 정말로 덮어씌우시겠습니까?\n기존 데이터는 완전히 삭제되며 복구할 수 없습니다.`)) {
+                    isAlreadySaved = true;
+                    startMatching();
+                }
             }
         } else { 
             isAlreadySaved = false; 
             startMatching(); 
         }
     }
+// ==========================================
+// 개선된 지능형 대진 생성 로직 (박빙 & 로테이션 보장)
+// ==========================================
+function startMatching() {
+    const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
+    if (selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
 
-    function startMatching() {
-        const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
-        if(selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
-        let stats = {}; fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        if(db.matchHistory) {
-            Object.values(db.matchHistory).forEach(m => {
-                if(!m.results) return;
-                m.lineups.forEach(l => {
-                    const res = m.results[l.id]; if(!res) return;
-                    const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-                    win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                    lose.forEach(p => { if(stats[p]) stats[p].total++; });
-                });
-            });
-        }
-        const wrMap = {}; fixedList.forEach(n => wrMap[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
-        let a = [], b = [];
-        if (currentBalanceMode === 'tight') {
-            const sorted = [...selected].sort((p1, p2) => wrMap[p2] - wrMap[p1]);
-            sorted.forEach((p, i) => (Math.floor(i/2)%2===0 ? (i%2===0?a:b) : (i%2===0?b:a)).push(p));
+    // [기존 실력 데이터 수집 로직 유지]
+    let stats = {}; 
+    fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+    Object.values(db.matchHistory).forEach(m => {
+        if(!m.results) return;
+        m.lineups.forEach(l => {
+            const res = m.results[l.id]; if(!res) return;
+            const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+            win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+            lose.forEach(p => { if(stats[p]) stats[p].total++; });
+        });
+    });
+    const winRates = {};
+    fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+
+    // [조건 0] 팀 나누기 (승률 기반 Snake Draft)
+    let aPool = [], bPool = [];
+    if (currentBalanceMode === 'tight') {
+        const sorted = [...selected].sort((p1, p2) => winRates[p2] - winRates[p1]);
+        sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
+    } else {
+        const shuffled = [...selected].sort(() => Math.random() - 0.5);
+        shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
+    }
+
+    const wc = parseInt(document.getElementById('winCondition').value) || 1;
+    const mode = document.getElementById('gameMode').value;
+    
+    // 회차 내 히스토리 추적 변수 (조건 1~4용)
+    let oppPairHistory = [];     // [조건 1] 상대팀 조합 이력
+    let partnerPairHistory = []; // [조건 2] 파트너 조합 이력
+    let singlesPlayCount = {};   // [조건 3] 단식 출전 횟수
+    selected.forEach(p => singlesPlayCount[p] = 0);
+    let consecutiveCount = {};   // [조건 4] 연속 출전 횟수
+    selected.forEach(p => consecutiveCount[p] = 0);
+    
+    currentMatchData = { teams: { a: aPool, b: bPool }, lineups: [], results: {}, config: { winCon: wc } };
+
+    for (let i = 1; i <= wc; i++) {
+        let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
+        if (aPool.length < 2 || bPool.length < 2) isDoubles = false;
+
+        let bestMatch = null;
+        let minPenalty = Infinity;
+
+        // 가능한 모든 대진 후보 평가
+        if (isDoubles) {
+            for (let a1 of aPool) for (let a2 of aPool) {
+                if (a1 === a2) continue;
+                for (let b1 of bPool) for (let b2 of bPool) {
+                    if (b1 === b2) continue;
+                    const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
+                    let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                    if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                }
+            }
         } else {
-            const shuffled = [...selected].sort(() => Math.random() - 0.5);
-            shuffled.forEach((p, i) => (i < shuffled.length / 2 ? a : b).push(p));
-        }
-        const wc = parseInt(document.getElementById('winCondition').value) || 1;
-        const mode = document.getElementById('gameMode').value;
-        currentMatchData = { teams:{a, b}, lineups:[], results:{}, config:{winCon:wc} };
-        for(let i=1; i<=wc; i++) {
-            let isD = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
-            if (a.length < 2 || b.length < 2) isD = false;
-            if(isD) {
-                let pA = [...a].sort(()=>Math.random()-0.5).slice(0,2);
-                let pB = [...b].sort(()=>Math.random()-0.5).slice(0,2);
-                const avgA = (wrMap[pA[0]] + wrMap[pA[1]]) / 2;
-                const avgB = (wrMap[pB[0]] + wrMap[pB[1]]) / 2;
-                currentMatchData.lineups.push({ id:i, pA, pB, type:'복식', probA: Math.round(avgA/(avgA+avgB)*100) });
-            } else {
-                let pA = [a[Math.floor(Math.random()*a.length)]];
-                let pB = [b[Math.floor(Math.random()*b.length)]];
-                currentMatchData.lineups.push({ id:i, pA, pB, type:'단식', probA: Math.round(wrMap[pA[0]]/(wrMap[pA[0]]+wrMap[pB[0]])*100) });
+            for (let pa of aPool) for (let pb of bPool) {
+                const pA = [pa], pB = [pb];
+                let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
             }
         }
-        document.getElementById('matchArea').style.display = 'block';
-        document.getElementById('teamPreviewArea').innerHTML = `<span class="team-label-a">TEAM A</span><br>${a.join(', ')}<br><span class="vs-divider">— VS —</span><span class="team-label-b">TEAM B</span><br>${b.join(', ')}`;
-        render();
+
+        // 최적 매치 확정 및 상태 업데이트
+        const playersThisMatch = [...bestMatch.pA, ...bestMatch.pB];
+        if (bestMatch.type === '복식') {
+            partnerPairHistory.push(bestMatch.pA.join('|'), bestMatch.pB.join('|'));
+        } else {
+            bestMatch.pA.concat(bestMatch.pB).forEach(p => singlesPlayCount[p]++);
+        }
+        bestMatch.pA.forEach(a => bestMatch.pB.forEach(b => oppPairHistory.push([a, b].sort().join('|'))));
+        
+        // [조건 4] 연속 출전 카운트 업데이트
+        selected.forEach(p => {
+            if (playersThisMatch.includes(p)) consecutiveCount[p]++;
+            else consecutiveCount[p] = 0;
+        });
+
+        // 승률 예측 및 데이터 삽입
+        const avgA = bestMatch.pA.reduce((s, p) => s + winRates[p], 0) / bestMatch.pA.length;
+        const avgB = bestMatch.pB.reduce((s, p) => s + winRates[p], 0) / bestMatch.pB.length;
+        const probA = Math.round(avgA / (avgA + avgB) * 100) || 50;
+
+        currentMatchData.lineups.push({ id: i, pA: bestMatch.pA, pB: bestMatch.pB, type: bestMatch.type, probA: probA });
     }
+
+    // UI 출력
+    document.getElementById('matchArea').style.display = 'block';
+    document.getElementById('teamPreviewArea').innerHTML = `
+        <span class="team-label-a">TEAM A</span><br>${aPool.join(', ')}<br>
+        <span class="vs-divider">— VS —</span>
+        <span class="team-label-b">TEAM B</span><br>${bPool.join(', ')}`;
+    render();
+}
+
+/**
+ * 페널티 계산기: 점수가 낮을수록 5가지 조건에 적합한 대진임
+ */
+function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates) {
+    let penalty = 0;
+    const currentAll = [...pA, ...pB];
+
+    // [조건 0] 실력 밸런스 (승률 차이 비례 페널티)
+    const avgA = pA.reduce((s, p) => s + winRates[p], 0) / pA.length;
+    const avgB = pB.reduce((s, p) => s + winRates[p], 0) / pB.length;
+    penalty += Math.abs(avgA - avgB) * 100;
+
+    // [조건 1] 상대팀 로테이션 (이미 붙었던 조합이면 강한 페널티)
+    pA.forEach(a => pB.forEach(b => {
+        const pair = [a, b].sort().join('|');
+        penalty += oppHist.filter(h => h === pair).length * 1000;
+    }));
+
+    // [조건 2] 파트너 로테이션 (이미 같은 팀이었던 복식조면 강한 페널티)
+    if (type === '복식') {
+        penalty += partHist.filter(h => h === pA.join('|') || h === pB.join('|')).length * 2000;
+    }
+
+    // [조건 3] 단식 전원 출전 (단식 횟수가 많은 사람일수록 매우 강한 페널티)
+    if (type === '단식') {
+        currentAll.forEach(p => penalty += singHist[p] * 5000);
+    }
+
+    // [조건 4] 3경기 연속 금지 (2연속 뛴 사람이 또 들어오면 최고 페널티)
+    currentAll.forEach(p => {
+        if (consHist[p] >= 2) penalty += 10000;
+        else if (consHist[p] === 1) penalty += 50; // 1번 연속은 적당히 피함
+    });
+
+    return penalty + Math.random(); // 완전 동일 점수 대비 무작위성 가미
+}
 
     function render() {
         if(!currentMatchData || !currentMatchData.lineups) return;
@@ -455,50 +600,41 @@
         document.getElementById('scoreA').innerText = wA; document.getElementById('scoreB').innerText = wB;
         currentMatchData.lineups.forEach(m => {
             const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
-            const typeIcon = m.type === '단식' ? '🏓👤' : '🏓🏓', probA = m.probA || 50, probB = 100 - probA;
+            const probA = m.probA || 50;
+            const probB = 100 - probA;
             const card = document.createElement('div'); card.className = 'match-card';
             if(win) card.style.borderLeft = `8px solid ${win==='A'?'var(--secondary)':'var(--danger)'}`;
-            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${typeIcon} ${m.type}</span></div>
+            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${m.type}</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0; font-weight:bold;">
-                    <div style="flex:1.2; text-align:left;" class="match-player-name">${m.pA.join(', ')}</div>
-                    <div style="display:flex; align-items:center; justify-content:center; flex:1.5;"><span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span><span style="color:#bbb; font-size:11px; font-weight:800; margin:0 5px;">VS</span><span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span></div>
-                    <div style="flex:1.2; text-align:right;" class="match-player-name">${m.pB.join(', ')}</div>
+                    <div style="flex:1.2; text-align:left;">${m.pA.join(', ')}</div>
+                    <div style="flex:1.5; text-align:center;">
+                        <span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span> VS <span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span>
+                    </div>
+                    <div style="flex:1.2; text-align:right;">${m.pB.join(', ')}</div>
                 </div>
                 <div class="match-btn-group"><button class="${win==='A'?'selected-a':''}" onclick="record(${m.id},'A')">A 승</button><button class="${win==='B'?'selected-b':''}" onclick="record(${m.id},'B')">B 승</button></div>`;
             area.appendChild(card);
         });
     }
 
-    /* -------------------------------------------------------------------------- */
-    /* 수정한 부분: 기존 기록이 있을 때 승패 변경 시에도 2중 확인 팝업 작동 */
-    /* -------------------------------------------------------------------------- */
     function record(id, w) {
-        // 이미 저장된 기록이 있는 상태에서 결과를 바꾸려 할 때
+        // [수정] 이미 저장된 기록을 불러온 경우, 수정 시 더블 체크
         if (isAlreadySaved) {
-            const firstCheck = confirm("기존에 저장된 경기 결과를 변경하시겠습니까?");
-            if (!firstCheck) return;
-
-            const secondCheck = confirm("변경 시 나중에 '최종 저장'을 눌러야 클라우드에 반영됩니다. 진행할까요?");
-            if (!secondCheck) return;
+            if (!confirm("기존에 저장된 경기 결과를 변경하시겠습니까?")) return;
+            if (!confirm("변경 시 나중에 '최종 저장'을 눌러야 클라우드에 반영됩니다. 정말 진행할까요?")) return;
         }
 
-        // 실제 승패 기록 로직
         currentMatchData.results[id] = (currentMatchData.results[id] === w) ? null : w;
         render();
-
         let a = 0, b = 0, target = Math.ceil(currentMatchData.config.winCon / 2);
         Object.values(currentMatchData.results).forEach(v => (v === 'A' ? a++ : (v === 'B' ? b++ : 0)));
-        
         if (a >= target || b >= target) { 
-            triggerConfetti(); // 폭죽 효과
+            triggerConfetti();
             const winner = (a >= target) ? 'A팀' : 'B팀';
             const loserList = (a >= target) ? currentMatchData.teams.b : currentMatchData.teams.a;
-            
             setTimeout(() => { 
-                alert(`🎉 축하합니다! ${winner}이 최종 승리하였습니다!`); 
-                if (confirm(`경기 결과를 저장하시겠습니까?`)) {
-                    saveToCloud(loserList); 
-                }
+                alert(`🎉 ${winner} 최종 승리!`); 
+                if (confirm(`경기 결과를 저장하시겠습니까?`)) saveToCloud(loserList); 
             }, 500); 
         }
     }
@@ -512,65 +648,121 @@
         }
     }
 
-/* -------------------------------------------------------------------------- */
-    /* 똘똘말이 로직 유지 및 보완 (1명일 때 제외) */
-    /* -------------------------------------------------------------------------- */
-   async function saveToCloud(losers = []) {
-        // --- 덮어씌우기 이중 확인 로직 추가 ---
-        if (isAlreadySaved) {
-            const firstCheck = confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?");
-            if (!firstCheck) return; 
-
-            const secondCheck = confirm("기존 데이터가 완전히 삭제되고 현재 결과로 대체됩니다. 정말 진행하시겠습니까?");
-            if (!secondCheck) return; 
+    async function saveToCloud(losers = []) {
+        // [수정] 덮어쓰기 저장 시 더블 체크
+        if (isAlreadySaved || db.matchHistory[getCurrentKey()]) {
+            if (!confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?")) return;
+            if (!confirm("⚠️ 기존 데이터가 완전히 삭제되고 현재 결과로 대체됩니다. 정말 진행하시겠습니까?")) return;
         }
-        // ----------------------------------
 
         document.getElementById('loading').style.display = 'flex';
         db.matchHistory[getCurrentKey()] = currentMatchData;
         try { 
             await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'}); 
-            alert("클라우드에 저장되었습니다."); 
+            alert("기록이 저장되었습니다."); 
             isAlreadySaved = true; 
             await syncWithCloud();
-
-            if(losers && losers.length > 1) { 
-                setTimeout(() => {
-                    if(confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
-                        document.querySelectorAll('input[name="player"]').forEach(cb => cb.checked = false);
-                        losers.forEach(name => {
-                            const cb = document.querySelector(`input[name="player"][value="${name}"]`);
-                            if(cb) cb.checked = true;
-                        });
-                        updateCount();
-                        
-                        let curS = parseInt(document.getElementById('matchSession').value);
-                        if(curS < 10) document.getElementById('matchSession').value = curS + 1;
-                        
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                        alert("패배 인원(" + losers.length + "명)이 선택되었습니다. '새 대진표 생성'을 눌러주세요.");
-                    }
-                }, 300);
-            } else if (losers && losers.length === 1) {
-                console.log("패배자가 1명이라 똘똘말이를 제안하지 않습니다.");
-            }
-        }
-        catch(e) { alert("저장 중 오류 발생"); } 
+            
+            handlePostSavePopups(losers);
+        } catch(e) { alert("저장 중 오류 발생"); } 
         finally { document.getElementById('loading').style.display = 'none'; }
+    }
+
+    function handlePostSavePopups(losers) {
+        if (!losers || losers.length === 0) return;
+
+        if (losers.length > 1) {
+            // 똘똘말이 먼저 확인
+            if (confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
+                applyToltol(losers);
+            } else {
+                confirmMoneyInput(losers);
+            }
+        } else {
+            // 1명일 땐 바로 게임비 확인
+            confirmMoneyInput(losers);
+        }
+    }
+
+    function confirmMoneyInput(losers) {
+        setTimeout(() => {
+            if (confirm("게임비 기부 내역을 입력하시겠습니까?")) {
+                showMoneyInputModal(losers);
+            }
+        }, 300);
+    }
+
+    function applyToltol(losers) {
+        document.querySelectorAll('input[name="player"]').forEach(cb => cb.checked = false);
+        losers.forEach(name => {
+            const cb = document.querySelector(`input[name="player"][value="${name}"]`);
+            if(cb) cb.checked = true;
+        });
+        updateCount();
+        let curS = parseInt(document.getElementById('matchSession').value);
+        if(curS < 10) {
+            document.getElementById('matchSession').value = curS + 1;
+            checkDateData(); 
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        alert("패배 인원이 선택되었습니다. 다음 대진을 생성하세요.");
+    }
+
+    function showMoneyInputModal(losers) {
+        const listArea = document.getElementById('moneyInputList');
+        listArea.innerHTML = "";
+        losers.forEach(name => {
+            listArea.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding: 10px; background: #f9f9f9; border-radius: 12px;">
+                    <span style="font-weight:bold;">${name}</span>
+                    <div style="display:flex; align-items:center;">
+                        <input type="number" class="money-input" data-name="${name}" placeholder="0"> 천원
+                    </div>
+                </div>`;
+        });
+        openModal('moneyInputModal');
+    }
+
+    async function saveMoneyAndFinish() {
+        const inputs = document.querySelectorAll('.money-input');
+        const today = document.getElementById('matchDate').value;
+        let hasData = false;
+        
+        inputs.forEach(input => {
+            const amount = parseInt(input.value) || 0;
+            if (amount > 0) {
+                db.moneyHistory.push({
+                    date: today,
+                    name: input.getAttribute('data-name'),
+                    amount: amount
+                });
+                hasData = true;
+            }
+        });
+
+        if(hasData) {
+            document.getElementById('loading').style.display = 'flex';
+            await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'});
+            document.getElementById('loading').style.display = 'none';
+            alert("기부액이 저장되었습니다.");
+        }
+        
+        closeModal('moneyInputModal');
+        updateUI();
     }
 
     async function resetDatabase() {
         const pw = prompt("비밀번호?");
         if (pw === "7640" && confirm("초기화할까요?")) {
             document.getElementById('loading').style.display = 'flex';
-            db = { matchHistory: {} };
+            db = { matchHistory: {}, moneyHistory: [] };
             try { await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'}); alert("초기화됨"); updateUI(); }
             catch (e) { alert("오류"); } finally { document.getElementById('loading').style.display = 'none'; }
         }
     }
 
     function handleManualSave() { 
-        if(confirm("저장하시겠습니까?")) {
+        if(confirm("최종 저장하시겠습니까?")) {
             let a=0, b=0;
             Object.values(currentMatchData.results).forEach(v=>(v==='A'?a++:(v==='B'?b++:0)));
             const loserList = (a >= b) ? currentMatchData.teams.b : currentMatchData.teams.a;
@@ -582,4 +774,3 @@
 </script>
 </body>
 </html>
-
