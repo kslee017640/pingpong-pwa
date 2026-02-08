@@ -29,7 +29,7 @@
             z-index: 20000; 
             animation: fadeOut 0.5s forwards; animation-delay: 2.5s;
         }
-       #intro-layer img {
+#intro-layer img {
             width: 85%; max-width: 350px;
             opacity: 0;
             animation: fadeIn 0.5s forwards;
@@ -59,7 +59,17 @@
         .version-tag { font-size: 10px; color: #ccc; font-weight: normal; margin-top: 3px; }
         
         .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
-        .box { background: var(--card-bg); padding: 15px; border-radius: 18px; margin-bottom: 12px; border: 1px solid #eaeaea; }
+
+        /* 기존 로직과 스타일은 유지하고 .box의 그림자 효과만 강화했습니다 */
+        .box { 
+            background: var(--card-bg); 
+            padding: 15px; 
+            border-radius: 18px; 
+            margin-bottom: 12px; 
+            border: 1px solid rgba(0,0,0,0.03); /* 선은 아주 연하게 변경 */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); /* 부드러운 그림자 추가 */
+        }
+
         .flex-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
         .input-group { flex: 1; display: flex; flex-direction: column; }
         .filter-label { font-size: 10px; font-weight: bold; color: #888; margin-bottom: 3px; padding-left: 2px; }
@@ -78,7 +88,17 @@
         .player-item input { width: 16px; height: 16px; margin: 0; }
         .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #2c3e50; color: white; padding: 15px; border-radius: 18px; margin: 12px 0; }
         .score-num { font-size: 2.5em; font-weight: 900; }
-        .match-card { background: #fff; border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
+
+        /* 대진표 카드에도 둥근 모서리와 그림자 효과 적용 */
+        .match-card { 
+            background: #fff; 
+            border-radius: 14px; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border: 1px solid rgba(0,0,0,0.03); /* 선은 연하게 */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.06); /* 부드러운 그림자 추가 */
+        }
+
         .match-btn-group { display: flex; gap: 8px; margin-top: 10px; }
         .match-btn-group button { padding: 8px; font-size: 14px; background: #f4f4f4; color: #555; }
         .selected-a { background: var(--secondary) !important; color: white !important; }
@@ -577,6 +597,4 @@
 </script>
 </body>
 </html>
-
-
 
