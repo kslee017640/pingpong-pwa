@@ -29,10 +29,12 @@
             z-index: 20000; 
             animation: fadeOut 0.5s forwards; animation-delay: 2.5s;
         }
-        #intro-layer img {
+       #intro-layer img {
             width: 85%; max-width: 350px;
             opacity: 0;
             animation: fadeIn 0.5s forwards;
+            border-radius: 24px; /* 이 부분을 추가하세요. 숫자가 클수록 더 둥글어집니다. */
+            overflow: hidden;    /* 이미지가 영역 밖으로 나가지 않게 잡아줍니다. */
         }
         .intro-text {
             margin-top: 20px;
@@ -574,4 +576,5 @@
 </script>
 </body>
 </html>
+
 
