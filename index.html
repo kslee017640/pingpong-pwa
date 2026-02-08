@@ -136,7 +136,6 @@
 </head>
 <body>
 
-
 <div id="intro-layer">
     <img src="intro.png" alt="PingPong DB">
     <div class="intro-text">클라우드 데이터 동기화 중...</div>
@@ -318,7 +317,7 @@
         if (db.matchHistory && db.matchHistory[key]) {
             let nextS = -1;
             for (let i = 1; i <= 10; i++) { if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; } }
-            if (nextS === -1) { alert("오늘 회차가 가득 찼습니다."); return; }
+            if (nextS === -1) { alert("당신은 탁구에 도른자~ 다음 시간에 만나요~"); return; }
             if (confirm(`기존 기록이 있습니다. 다음 회차(${nextS}회차)로 생성할까요?`)) {
                 document.getElementById('matchSession').value = nextS; isAlreadySaved = false; startMatching();
             }
@@ -575,5 +574,4 @@
 </script>
 </body>
 </html>
-
 
