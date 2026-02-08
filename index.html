@@ -374,19 +374,30 @@
         updateUI();
     }
 
-    function handleSmartStart() {
+     function handleSmartStart() {
         const d = document.getElementById('matchDate').value;
         const t = document.getElementById('matchTime').value;
         const s = document.getElementById('matchSession').value;
         const key = `${d}_${t}_s${s}`;
+        
         if (db.matchHistory && db.matchHistory[key]) {
+            // 이미 데이터가 있는 회차에서 '새 대진표 생성'을 누를 경우
             let nextS = -1;
             for (let i = 1; i <= 10; i++) { if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; } }
-            if (nextS === -1) { alert("당신은 탁구에 도른자~ 다음 시간에 만나요~"); return; }
-            if (confirm(`해당 회차는 이미 기록이 있습니다.\n기록되지 않은 다음 회차(${nextS}회차)로 생성할까요?`)) {
-                document.getElementById('matchSession').value = nextS; isAlreadySaved = false; startMatching();
+            
+            if (confirm(`해당 회차는 이미 기록이 있습니다.\n기록을 무시하고 현재 회차에 '새 대진표'를 만드시겠습니까?\n(저장 시 덮어씌우기 확인 팝업이 뜹니다)`)) {
+                // 이 부분을 false로 만들지 않고 true로 유지하여 저장 시 팝업이 뜨게 함
+                isAlreadySaved = true; 
+                startMatching();
+            } else if (nextS !== -1 && confirm(`기록되지 않은 다음 회차(${nextS}회차)로 생성할까요?`)) {
+                document.getElementById('matchSession').value = nextS; 
+                isAlreadySaved = false; 
+                startMatching();
             }
-        } else { isAlreadySaved = false; startMatching(); }
+        } else { 
+            isAlreadySaved = false; 
+            startMatching(); 
+        }
     }
 
     function startMatching() {
@@ -459,22 +470,33 @@
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 수정한 부분: record 함수 내 폭죽 효과 및 승리팀 팝업 알림 복구 */
+    /* 수정한 부분: 기존 기록이 있을 때 승패 변경 시에도 2중 확인 팝업 작동 */
     /* -------------------------------------------------------------------------- */
     function record(id, w) {
+        // 이미 저장된 기록이 있는 상태에서 결과를 바꾸려 할 때
+        if (isAlreadySaved) {
+            const firstCheck = confirm("기존에 저장된 경기 결과를 변경하시겠습니까?");
+            if (!firstCheck) return;
+
+            const secondCheck = confirm("변경 시 나중에 '최종 저장'을 눌러야 클라우드에 반영됩니다. 진행할까요?");
+            if (!secondCheck) return;
+        }
+
+        // 실제 승패 기록 로직
         currentMatchData.results[id] = (currentMatchData.results[id] === w) ? null : w;
         render();
-        let a=0, b=0, target = Math.ceil(currentMatchData.config.winCon/2);
-        Object.values(currentMatchData.results).forEach(v=>(v==='A'?a++:(v==='B'?b++:0)));
+
+        let a = 0, b = 0, target = Math.ceil(currentMatchData.config.winCon / 2);
+        Object.values(currentMatchData.results).forEach(v => (v === 'A' ? a++ : (v === 'B' ? b++ : 0)));
         
-        if(a>=target || b>=target) { 
-            triggerConfetti(); // 폭죽 효과 복구
+        if (a >= target || b >= target) { 
+            triggerConfetti(); // 폭죽 효과
             const winner = (a >= target) ? 'A팀' : 'B팀';
             const loserList = (a >= target) ? currentMatchData.teams.b : currentMatchData.teams.a;
             
             setTimeout(() => { 
-                alert(`🎉 축하합니다! ${winner}이 최종 승리하였습니다!`); // 승리 축하 팝업 복구
-                if(confirm(`경기 결과를 저장하시겠습니까?`)) {
+                alert(`🎉 축하합니다! ${winner}이 최종 승리하였습니다!`); 
+                if (confirm(`경기 결과를 저장하시겠습니까?`)) {
                     saveToCloud(loserList); 
                 }
             }, 500); 
@@ -493,17 +515,25 @@
 /* -------------------------------------------------------------------------- */
     /* 똘똘말이 로직 유지 및 보완 (1명일 때 제외) */
     /* -------------------------------------------------------------------------- */
-    async function saveToCloud(losers = []) {
+   async function saveToCloud(losers = []) {
+        // --- 덮어씌우기 이중 확인 로직 추가 ---
+        if (isAlreadySaved) {
+            const firstCheck = confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?");
+            if (!firstCheck) return; 
+
+            const secondCheck = confirm("기존 데이터가 완전히 삭제되고 현재 결과로 대체됩니다. 정말 진행하시겠습니까?");
+            if (!secondCheck) return; 
+        }
+        // ----------------------------------
+
         document.getElementById('loading').style.display = 'flex';
         db.matchHistory[getCurrentKey()] = currentMatchData;
         try { 
-            // no-cors 모드는 응답 확인이 어려우나 요청은 전송됨
             await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'}); 
             alert("클라우드에 저장되었습니다."); 
             isAlreadySaved = true; 
             await syncWithCloud();
 
-            // 수정된 부분: 패배 인원이 2명 이상일 때만 똘똘말이 진행
             if(losers && losers.length > 1) { 
                 setTimeout(() => {
                     if(confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
