@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
 
       <!-- PWA -->
@@ -10,18 +9,25 @@
   <!-- favicon / 탭 아이콘 -->
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PING-PONG DB PRO</title> 
+    <title>PING-PONG DB PRO</title>
+    
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/ping-pong.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/ping-pong.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="탁구 DB">
 
     <style>
         :root { --primary: #2e7d32; --secondary: #1976d2; --danger: #d32f2f; --bg: #f8f9fa; --card-bg: #ffffff; --btn-gray: #607d8b; }
         body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.4; }
         .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .header-container { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; flex-direction: column; }
-        .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; position: relative; }
+        .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        
         /* 버전 표시 스타일 */
-        .version-tag { font-size: 10px; color: #999; font-weight: normal; vertical-align: middle; margin-left: 5px; }
+        .version-tag { font-size: 10px; color: #ccc; font-weight: normal; margin-top: 3px; }
         
         .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
         .box { background: var(--card-bg); padding: 15px; border-radius: 18px; margin-bottom: 12px; border: 1px solid #eaeaea; }
@@ -278,8 +284,8 @@
         if (db.matchHistory && db.matchHistory[key]) {
             let nextS = -1;
             for (let i = 1; i <= 10; i++) { if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; } }
-            if (nextS === -1) { alert("오늘 경기를 정말 많이 하셨네요! 10회차가 가득 찼습니다."); return; }
-            if (confirm(`해당 회차는 이미 기록이 있습니다.\n기록되지 않은 다음 회차(${nextS}회차)로 생성할까요?`)) {
+            if (nextS === -1) { alert("오늘 회차가 가득 찼습니다."); return; }
+            if (confirm(`기존 기록이 있습니다. 다음 회차(${nextS}회차)로 생성할까요?`)) {
                 document.getElementById('matchSession').value = nextS; isAlreadySaved = false; startMatching();
             }
         } else { isAlreadySaved = false; startMatching(); }
@@ -301,11 +307,13 @@
         return stats;
     }
 
+    // 대진표 생성 로직 (복식 중복 방지 보완)
     function startMatching() {
         const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
         if(selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
         const stats = getWinRateMap(), wrMap = {};
         fixedList.forEach(n => wrMap[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        
         let a = [], b = [];
         if (currentBalanceMode === 'tight') {
             const sorted = [...selected].sort((p1, p2) => wrMap[p2] - wrMap[p1]);
@@ -314,25 +322,40 @@
             const shuffled = [...selected].sort(() => Math.random() - 0.5);
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? a : b).push(p));
         }
+
         const wc = parseInt(document.getElementById('winCondition').value) || 1, mode = document.getElementById('gameMode').value;
         currentMatchData = { teams:{a, b}, lineups:[], results:{}, config:{winCon:wc} };
-        let gPairH = [], gVsH = [], pLastM = {}, pSCount = {};
+
+        // 이번 회차 내 매칭 히스토리 추적
+        let gPairH = []; 
+        let gVsH = []; 
+        let pLastM = {}; 
+        let pSCount = {};
+        
         selected.forEach(p => { pLastM[p] = -1; pSCount[p] = 0; });
+
         for(let i=1; i<=wc; i++) {
             let isD = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
             if (a.length < 2 || b.length < 2) isD = false;
+
             if(isD) {
                 let pA = selectBestPair(a, i, pLastM, gPairH, wrMap);
                 let pB = selectBestPair(b, i, pLastM, gPairH, wrMap, pA, gVsH);
+                
                 const avgA = (wrMap[pA[0]] + wrMap[pA[1]]) / 2, avgB = (wrMap[pB[0]] + wrMap[pB[1]]) / 2;
                 const probA = Math.round((avgA / (avgA + avgB || 1)) * 100);
+                
                 currentMatchData.lineups.push({ id:i, pA, pB, type:'복식', probA });
+                
                 pA.concat(pB).forEach(p => pLastM[p] = i);
-                gPairH.push([...pA].sort(), [...pB].sort()); gVsH.push({a: [...pA].sort(), b: [...pB].sort()});
+                gPairH.push(pA.sort().join('|'));
+                gPairH.push(pB.sort().join('|'));
+                gVsH.push({a: [...pA].sort(), b: [...pB].sort()});
             } else {
                 let m = selectBestSingle(a, b, i, pLastM, pSCount, gVsH, wrMap);
                 const probA = Math.round((wrMap[m.pa] / (wrMap[m.pa] + wrMap[m.pb] || 1)) * 100);
                 currentMatchData.lineups.push({ id:i, pA:[m.pa], pB:[m.pb], type:'단식', probA });
+                
                 pLastM[m.pa] = i; pLastM[m.pb] = i; pSCount[m.pa]++; pSCount[m.pb]++;
                 gVsH.push({a: [m.pa], b: [m.pb]});
             }
@@ -346,23 +369,29 @@
         for(let i=0; i<team.length; i++) {
             for(let j=i+1; j<team.length; j++) {
                 let p = [team[i], team[j]].sort();
+                let pKey = p.join('|');
                 let score = 0;
+
+                // 1. 회차 내 복식 조합 중복 방지 (최상위 우선순위)
+                let alreadyPaired = pairH.filter(h => h === pKey).length;
+                score += alreadyPaired * 100000; 
+
+                // 2. 연속 출전 방지
                 if (lastM[p[0]] === round - 1) score += 5000;
                 if (lastM[p[1]] === round - 1) score += 5000;
-                score += pairH.filter(h => h[0] === p[0] && h[1] === p[1]).length * 2000;
+
+                // 3. 밸런스 (박빙 모드 시)
                 if (currentBalanceMode === 'tight' && oppP) {
-                    let pWR = (wrMap[p[0]] + wrMap[p[1]]) / 2, oWR = (wrMap[oppP[0]] + wrMap[oppP[1]]) / 2;
-                    score += Math.abs(pWR - oWR) * 1000;
-                    let rm = vsH.filter(h => {
-                        let hA = h.a.join('|'), hB = h.b.join('|'), cA = p.join('|'), cB = oppP.join('|');
-                        return (hA === cA && hB === cB) || (hA === cB && hB === cA);
-                    }).length;
-                    score += rm * 3000;
+                    let pWR = (wrMap[p[0]] + wrMap[p[1]]) / 2;
+                    let oWR = (wrMap[oppP[0]] + wrMap[oppP[1]]) / 2;
+                    score += Math.abs(pWR - oWR) * 2000;
                 }
+
                 candidates.push({ p, score, rnd: Math.random() });
             }
         }
-        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd); return candidates[0].p;
+        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd);
+        return candidates[0].p;
     }
 
     function selectBestSingle(teamA, teamB, round, lastM, sCount, vsH, wrMap) {
@@ -375,8 +404,6 @@
                 if (lastM[pb] === round - 1) score += 2000;
                 if (currentBalanceMode === 'tight') {
                     score += Math.abs(wrMap[pa] - wrMap[pb]) * 1500;
-                    let rm = vsH.filter(h => h.a.length === 1 && ((h.a[0] === pa && h.b[0] === pb) || (h.a[0] === pb && h.b[0] === pa))).length;
-                    score += rm * 4000;
                 }
                 candidates.push({ pa, pb, score, rnd: Math.random() });
             }
