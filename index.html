@@ -437,24 +437,21 @@
     }
 
     function render() {
-        if(!currentMatchData) return;
+        if(!currentMatchData || !currentMatchData.lineups) return;
         const area = document.getElementById('lineupArea'); area.innerHTML = "";
-        let wA=0, wB=0; Object.values(currentMatchData.results).forEach(v => (v==='A'?wA++:(v==='B'?wB++:0)));
+        let wA=0, wB=0; if(!currentMatchData.results) currentMatchData.results = {};
+        Object.values(currentMatchData.results).forEach(v => (v==='A'?wA++:(v==='B'?wB++:0)));
         document.getElementById('scoreA').innerText = wA; document.getElementById('scoreB').innerText = wB;
         currentMatchData.lineups.forEach(m => {
-            const win = currentMatchData.results[m.id], icon = m.type === '단식' ? '🏓👤' : '🏓🏓';
-            const probA = m.probA || 50, probB = 100 - probA;
+            const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
+            const typeIcon = m.type === '단식' ? '🏓👤' : '🏓🏓', probA = m.probA || 50, probB = 100 - probA;
             const card = document.createElement('div'); card.className = 'match-card';
             if(win) card.style.borderLeft = `8px solid ${win==='A'?'var(--secondary)':'var(--danger)'}`;
-            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${m.type==='단식'?'type-singles':'type-doubles'}">${icon} ${m.type}</span></div>
+            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${typeIcon} ${m.type}</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0; font-weight:bold;">
-                    <div style="flex:1; text-align:left;">${m.pA.join(', ')}</div>
-                    <div style="flex:1.5; text-align:center; display:flex; justify-content:center; align-items:center; gap:5px;">
-                        <span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span>
-                        <span style="color:#bbb; font-size:11px;">VS</span>
-                        <span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span>
-                    </div>
-                    <div style="flex:1; text-align:right;">${m.pB.join(', ')}</div>
+                    <div style="flex:1.2; text-align:left;" class="match-player-name">${m.pA.join(', ')}</div>
+                    <div style="display:flex; align-items:center; justify-content:center; flex:1.5;"><span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span><span style="color:#bbb; font-size:11px; font-weight:800; margin:0 5px;">VS</span><span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span></div>
+                    <div style="flex:1.2; text-align:right;" class="match-player-name">${m.pB.join(', ')}</div>
                 </div>
                 <div class="match-btn-group"><button class="${win==='A'?'selected-a':''}" onclick="record(${m.id},'A')">A 승</button><button class="${win==='B'?'selected-b':''}" onclick="record(${m.id},'B')">B 승</button></div>`;
             area.appendChild(card);
