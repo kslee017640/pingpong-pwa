@@ -19,19 +19,24 @@
         body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.4; }
         .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .header-container { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; flex-direction: column; }
-        .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; }
+        .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; position: relative; }
+        /* 버전 표시 스타일 */
+        .version-tag { font-size: 10px; color: #999; font-weight: normal; vertical-align: middle; margin-left: 5px; }
+        
         .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
         .box { background: var(--card-bg); padding: 15px; border-radius: 18px; margin-bottom: 12px; border: 1px solid #eaeaea; }
         .flex-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
         .input-group { flex: 1; display: flex; flex-direction: column; }
         .filter-label { font-size: 10px; font-weight: bold; color: #888; margin-bottom: 3px; padding-left: 2px; }
         select, input { padding: 8px; border-radius: 10px; border: 1px solid #ddd; font-size: 13px; width: 100%; box-sizing: border-box; height: 40px; }
+        
         button { border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; font-size: 14px; }
+        
         .btn-blue { background-color: var(--secondary); color: white; }
         .btn-orange { background-color: #ff9800; color: white; margin-top: 8px; }
-        .btn-red { background-color: var(--danger); color: white; margin-top: 15px; font-size: 11px; padding: 6px; opacity: 0.7; }
+        .btn-red { background-color: var(--danger); color: white; margin-top: 15px; font-size: 14px; padding: 10px; opacity: 0.7; }
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #eee; padding: 4px; border-radius: 12px; margin-bottom: 8px; }
-        .switch-btn { flex: 1; text-align: center; padding: 8px; font-size: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .switch-btn { flex: 1; text-align: center; padding: 8px; font-size: 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .switch-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .player-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
         .player-item { background: #f9f9f9; padding: 8px 12px; border-radius: 10px; border: 1px solid #eee; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
@@ -40,14 +45,14 @@
         .score-num { font-size: 2.5em; font-weight: 900; }
         .match-card { background: #fff; border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid #eee; }
         .match-btn-group { display: flex; gap: 8px; margin-top: 10px; }
-        .match-btn-group button { padding: 8px; font-size: 13px; background: #f4f4f4; color: #555; }
+        .match-btn-group button { padding: 8px; font-size: 14px; background: #f4f4f4; color: #555; }
         .selected-a { background: var(--secondary) !important; color: white !important; }
         .selected-b { background: var(--danger) !important; color: white !important; }
-        .type-badge { padding: 2px 6px; border-radius: 6px; font-weight: bold; font-size: 10px; color: white; margin-left: 6px; }
+        .type-badge { padding: 3px 8px; border-radius: 8px; font-weight: bold; font-size: 10px; color: white; margin-left: 6px; white-space: nowrap; }
         .type-singles { background-color: #9c27b0; }
         .type-doubles { background-color: #009688; }
         
-        .win-prob { font-size: 13px; color: #aaa; font-weight: normal; margin: 0 4px; }
+        .win-prob { font-size: 13px; color: #aaa; font-weight: normal; margin: 0; }
         .win-prob.high { color: #ff5722; font-weight: 800; }
 
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 10000; justify-content: center; align-items: center; font-weight: bold; }
@@ -59,19 +64,19 @@
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th { background: var(--primary); color: white; padding: 10px 4px; font-size: 13px; }
-        td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #eee; }
-        .rank-num { font-weight: 800; font-size: 15px; color: #666; }
-        .rank-name { font-size: 15px; font-weight: 800; }
-        .rank-winrate { font-size: 16px; font-weight: 800; }
+        th { background: var(--primary); color: white; padding: 10px 4px; font-size: 14px; }
+        td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #eee; font-size: 14px; }
+        .rank-num { font-weight: 800; font-size: 14px; color: #666; }
+        .rank-name { font-size: 14px; font-weight: 800; }
+        .rank-winrate { font-size: 14px; font-weight: 800; }
 
         .period-btns { display: flex; gap: 4px; margin-bottom: 8px; width: 100%; }
-        .btn-p { flex: 1; padding: 8px 2px; font-size: 15px; background: #eee; color: #666; border-radius: 8px; }
+        .btn-p { flex: 1; padding: 8px 2px; font-size: 14px; background: #eee; color: #666; border-radius: 8px; }
         .btn-p.active { background: var(--primary); color: white; }
         .clickable-name { color: var(--secondary); text-decoration: underline; cursor: pointer; }
         
         .vs-detail { font-size: 11px; color: #666; display: block; margin-top: 2px; }
-        .vs-detail b { font-size: 13px; color: #333; }
+        .vs-detail b { font-size: 14px; color: #333; }
         .vs-detail-rate { font-size: 12px; color: var(--primary); font-weight: 800; margin-left: 2px; }
         
         #teamPreviewArea { 
@@ -101,7 +106,7 @@
 <div id="loading">데이터 동기화 중...</div>
 <div class="container">
     <div class="header-container">
-        <div class="header-title">🏓 PING-PONG DB PRO</div>
+        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.0</span></div>
         <div class="header-subtitle">Designed by KS</div>
     </div>
     
@@ -169,7 +174,7 @@
     </div>
 </div>
 
-<div id="playerModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'playerModal')">
+<div id="playerModal" class="modal-overlay" onclick="closeClick(event, 'playerModal')">
     <div class="modal-content">
         <div class="modal-header">
             <span style="font-weight: 800; font-size: 16px;">참여자 선택</span>
@@ -180,7 +185,7 @@
     </div>
 </div>
 
-<div id="recordModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'recordModal')">
+<div id="recordModal" class="modal-overlay" onclick="closeClick(event, 'recordModal')">
     <div class="modal-content">
         <div class="modal-header">
             <span id="recordModalTitle" style="font-weight: 800; font-size: 16px;">상대 전적</span>
@@ -224,7 +229,7 @@
     function updateCount() { document.getElementById('selectedCountText').innerText = document.querySelectorAll('input[name="player"]:checked').length; }
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function closeModalOnOuterClick(e, id) { if(e.target.id === id) closeModal(id); }
+    function closeClick(e, id) { if(e.target.id === id) closeModal(id); }
     function getCurrentKey() { return `${document.getElementById('matchDate').value}_${document.getElementById('matchTime').value}_s${document.getElementById('matchSession').value}`; }
 
     function checkDateData() {
@@ -237,8 +242,7 @@
             currentMatchData = JSON.parse(JSON.stringify(matchData));
             document.getElementById('matchArea').style.display = 'block';
             updateTeamPreview(currentMatchData.teams.a, currentMatchData.teams.b);
-            isAlreadySaved = true; 
-            render(); 
+            isAlreadySaved = true; render(); 
         } else {
             document.getElementById('dateStatus').innerHTML = "⚪ 기록 없음 (새 대진 생성 가능)";
             document.getElementById('dateStatus').style.color = "#ccc";
@@ -264,20 +268,17 @@
             const response = await fetch(`${API_URL}?t=${Date.now()}`);
             const text = await response.text(); 
             if(text && text !== "EMPTY") { db = JSON.parse(text); if(!db.matchHistory) db.matchHistory = {}; }
-            else { db = { matchHistory: {} }; }
             updateUI(); checkDateData();
         } catch(e) { console.error(e); } finally { document.getElementById('loading').style.display = 'none'; }
     }
 
     function handleSmartStart() {
-        const d = document.getElementById('matchDate').value;
-        const t = document.getElementById('matchTime').value;
-        const s = document.getElementById('matchSession').value;
+        const d = document.getElementById('matchDate').value, t = document.getElementById('matchTime').value, s = document.getElementById('matchSession').value;
         const key = `${d}_${t}_s${s}`;
         if (db.matchHistory && db.matchHistory[key]) {
             let nextS = -1;
             for (let i = 1; i <= 10; i++) { if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; } }
-            if (nextS === -1) { alert("당신은 탁구에 도른자~ 다음 시간에 만나요~"); return; }
+            if (nextS === -1) { alert("오늘 경기를 정말 많이 하셨네요! 10회차가 가득 찼습니다."); return; }
             if (confirm(`해당 회차는 이미 기록이 있습니다.\n기록되지 않은 다음 회차(${nextS}회차)로 생성할까요?`)) {
                 document.getElementById('matchSession').value = nextS; isAlreadySaved = false; startMatching();
             }
@@ -303,11 +304,8 @@
     function startMatching() {
         const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
         if(selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
-
-        const stats = getWinRateMap();
-        const wrMap = {};
+        const stats = getWinRateMap(), wrMap = {};
         fixedList.forEach(n => wrMap[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
-
         let a = [], b = [];
         if (currentBalanceMode === 'tight') {
             const sorted = [...selected].sort((p1, p2) => wrMap[p2] - wrMap[p1]);
@@ -316,98 +314,74 @@
             const shuffled = [...selected].sort(() => Math.random() - 0.5);
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? a : b).push(p));
         }
-
-        const wc = parseInt(document.getElementById('winCondition').value) || 1;
-        const mode = document.getElementById('gameMode').value;
+        const wc = parseInt(document.getElementById('winCondition').value) || 1, mode = document.getElementById('gameMode').value;
         currentMatchData = { teams:{a, b}, lineups:[], results:{}, config:{winCon:wc} };
-
-        let globalPairHist = [];
-        let globalVsHist = [];
-        let playerLastMatch = {};
-        let playerSinglesCount = {}; 
-        
-        selected.forEach(p => { 
-            playerLastMatch[p] = -1; 
-            playerSinglesCount[p] = 0; 
-        });
-
+        let gPairH = [], gVsH = [], pLastM = {}, pSCount = {};
+        selected.forEach(p => { pLastM[p] = -1; pSCount[p] = 0; });
         for(let i=1; i<=wc; i++) {
             let isD = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
             if (a.length < 2 || b.length < 2) isD = false;
-
             if(isD) {
-                let bestPairA = selectBestPair(a, i, playerLastMatch, globalPairHist, wrMap);
-                let bestPairB = selectBestPair(b, i, playerLastMatch, globalPairHist, wrMap, bestPairA, globalVsHist);
-                const avgA = (wrMap[bestPairA[0]] + wrMap[bestPairA[1]]) / 2;
-                const avgB = (wrMap[bestPairB[0]] + wrMap[bestPairB[1]]) / 2;
+                let pA = selectBestPair(a, i, pLastM, gPairH, wrMap);
+                let pB = selectBestPair(b, i, pLastM, gPairH, wrMap, pA, gVsH);
+                const avgA = (wrMap[pA[0]] + wrMap[pA[1]]) / 2, avgB = (wrMap[pB[0]] + wrMap[pB[1]]) / 2;
                 const probA = Math.round((avgA / (avgA + avgB || 1)) * 100);
-                currentMatchData.lineups.push({ id:i, pA: bestPairA, pB: bestPairB, type:'복식', probA });
-                bestPairA.forEach(p => playerLastMatch[p] = i);
-                bestPairB.forEach(p => playerLastMatch[p] = i);
-                globalPairHist.push([...bestPairA].sort(), [...bestPairB].sort());
-                globalVsHist.push({a: [...bestPairA].sort(), b: [...bestPairB].sort()});
+                currentMatchData.lineups.push({ id:i, pA, pB, type:'복식', probA });
+                pA.concat(pB).forEach(p => pLastM[p] = i);
+                gPairH.push([...pA].sort(), [...pB].sort()); gVsH.push({a: [...pA].sort(), b: [...pB].sort()});
             } else {
-                let bestMatch = selectBestSingle(a, b, i, playerLastMatch, playerSinglesCount, globalVsHist, wrMap);
-                const probA = Math.round((wrMap[bestMatch.pa] / (wrMap[bestMatch.pa] + wrMap[bestMatch.pb] || 1)) * 100);
-                currentMatchData.lineups.push({ id:i, pA: [bestMatch.pa], pB: [bestMatch.pb], type:'단식', probA });
-                playerLastMatch[bestMatch.pa] = i; 
-                playerLastMatch[bestMatch.pb] = i;
-                playerSinglesCount[bestMatch.pa]++; 
-                playerSinglesCount[bestMatch.pb]++;
-                globalVsHist.push({a: [bestMatch.pa], b: [bestMatch.pb]});
+                let m = selectBestSingle(a, b, i, pLastM, pSCount, gVsH, wrMap);
+                const probA = Math.round((wrMap[m.pa] / (wrMap[m.pa] + wrMap[m.pb] || 1)) * 100);
+                currentMatchData.lineups.push({ id:i, pA:[m.pa], pB:[m.pb], type:'단식', probA });
+                pLastM[m.pa] = i; pLastM[m.pb] = i; pSCount[m.pa]++; pSCount[m.pb]++;
+                gVsH.push({a: [m.pa], b: [m.pb]});
             }
         }
-        document.getElementById('matchArea').style.display = 'block';
-        updateTeamPreview(a, b);
-        render(); 
+        document.getElementById('matchArea').style.display = 'block'; updateTeamPreview(a, b); render(); 
         window.scrollTo({top: document.getElementById('matchArea').offsetTop, behavior: 'smooth'});
     }
 
-    function selectBestPair(team, round, lastMatch, pairHist, wrMap, opponentPair = null, vsHist = null) {
+    function selectBestPair(team, round, lastM, pairH, wrMap, oppP = null, vsH = null) {
         let candidates = [];
         for(let i=0; i<team.length; i++) {
             for(let j=i+1; j<team.length; j++) {
                 let p = [team[i], team[j]].sort();
                 let score = 0;
-                if (lastMatch[p[0]] === round - 1) score += 5000;
-                if (lastMatch[p[1]] === round - 1) score += 5000;
-                score += pairHist.filter(h => h[0] === p[0] && h[1] === p[1]).length * 2000;
-                let pairWR = (wrMap[p[0]] + wrMap[p[1]]) / 2;
-                if (currentBalanceMode === 'tight' && opponentPair) {
-                    let oppWR = (wrMap[opponentPair[0]] + wrMap[opponentPair[1]]) / 2;
-                    score += Math.abs(pairWR - oppWR) * 1000;
-                    let rematch = vsHist.filter(h => {
-                        let hA = h.a.join('|'), hB = h.b.join('|'), curA = p.join('|'), curB = opponentPair.join('|');
-                        return (hA === curA && hB === curB) || (hA === curB && hB === curA);
+                if (lastM[p[0]] === round - 1) score += 5000;
+                if (lastM[p[1]] === round - 1) score += 5000;
+                score += pairH.filter(h => h[0] === p[0] && h[1] === p[1]).length * 2000;
+                if (currentBalanceMode === 'tight' && oppP) {
+                    let pWR = (wrMap[p[0]] + wrMap[p[1]]) / 2, oWR = (wrMap[oppP[0]] + wrMap[oppP[1]]) / 2;
+                    score += Math.abs(pWR - oWR) * 1000;
+                    let rm = vsH.filter(h => {
+                        let hA = h.a.join('|'), hB = h.b.join('|'), cA = p.join('|'), cB = oppP.join('|');
+                        return (hA === cA && hB === cB) || (hA === cB && hB === cA);
                     }).length;
-                    score += rematch * 3000;
+                    score += rm * 3000;
                 }
                 candidates.push({ p, score, rnd: Math.random() });
             }
         }
-        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd);
-        return candidates[0].p;
+        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd); return candidates[0].p;
     }
 
-    function selectBestSingle(teamA, teamB, round, lastMatch, singlesCount, vsHist, wrMap) {
+    function selectBestSingle(teamA, teamB, round, lastM, sCount, vsH, wrMap) {
         let candidates = [];
         for(let pa of teamA) {
             for(let pb of teamB) {
                 let score = 0;
-                score += singlesCount[pa] * 10000;
-                score += singlesCount[pb] * 10000;
-                if (lastMatch[pa] === round - 1) score += 2000;
-                if (lastMatch[pb] === round - 1) score += 2000;
+                score += sCount[pa] * 10000 + sCount[pb] * 10000;
+                if (lastM[pa] === round - 1) score += 2000;
+                if (lastM[pb] === round - 1) score += 2000;
                 if (currentBalanceMode === 'tight') {
                     score += Math.abs(wrMap[pa] - wrMap[pb]) * 1500;
-                    let rematch = vsHist.filter(h => h.a.length === 1 && ((h.a[0] === pa && h.b[0] === pb) || (h.a[0] === pb && h.b[0] === pa))).length;
-                    score += rematch * 4000;
+                    let rm = vsH.filter(h => h.a.length === 1 && ((h.a[0] === pa && h.b[0] === pb) || (h.a[0] === pb && h.b[0] === pa))).length;
+                    score += rm * 4000;
                 }
                 candidates.push({ pa, pb, score, rnd: Math.random() });
             }
         }
-        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd);
-        return candidates[0];
+        candidates.sort((x, y) => x.score - y.score || x.rnd - y.rnd); return candidates[0];
     }
 
     function render() {
@@ -417,23 +391,14 @@
         Object.values(currentMatchData.results).forEach(v => (v==='A'?wA++:(v==='B'?wB++:0)));
         document.getElementById('scoreA').innerText = wA; document.getElementById('scoreB').innerText = wB;
         currentMatchData.lineups.forEach(m => {
-            const win = currentMatchData.results[m.id];
-            const typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
-            const probA = m.probA || 50;
-            const probB = 100 - probA;
+            const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
+            const typeIcon = m.type === '단식' ? '🏓👤' : '🏓🏓', probA = m.probA || 50, probB = 100 - probA;
             const card = document.createElement('div'); card.className = 'match-card';
             if(win) card.style.borderLeft = `8px solid ${win==='A'?'var(--secondary)':'var(--danger)'}`;
-            card.innerHTML = `<div style="display:flex; align-items:center;">
-                    <small style="color:#888;">#${m.id}</small>
-                    <span class="type-badge ${typeClass}">${m.type}</span>
-                </div>
+            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${typeIcon} ${m.type}</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0; font-weight:bold;">
                     <div style="flex:1.2; text-align:left;" class="match-player-name">${m.pA.join(', ')}</div>
-                    <div style="display:flex; align-items:center; justify-content:center; flex:1.5;">
-                        <span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span>
-                        <span style="color:#bbb; font-size:11px; font-weight:800;">VS</span>
-                        <span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span>
-                    </div>
+                    <div style="display:flex; align-items:center; justify-content:center; flex:1.5;"><span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span><span style="color:#bbb; font-size:11px; font-weight:800; margin:0 5px;">VS</span><span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span></div>
                     <div style="flex:1.2; text-align:right;" class="match-player-name">${m.pB.join(', ')}</div>
                 </div>
                 <div class="match-btn-group"><button class="${win==='A'?'selected-a':''}" onclick="record(${m.id},'A')">A 승</button><button class="${win==='B'?'selected-b':''}" onclick="record(${m.id},'B')">B 승</button></div>`;
@@ -454,13 +419,12 @@
     }
 
     function handleManualSave() {
-        if(isAlreadySaved) { if(confirm("이미 저장된 기록이 있습니다. 덮어쓰시겠습니까?")) if(confirm("정말로 다시 저장하시겠습니까? (최종 확인)")) saveToCloud(); }
+        if(isAlreadySaved) { if(confirm("이미 저장된 기록이 있습니다. 덮어쓰시겠습니까?")) saveToCloud(); }
         else if(confirm("결과를 최종 저장하시겠습니까?")) saveToCloud();
     }
 
     async function saveToCloud(isAuto = false) {
-        const key = getCurrentKey();
-        document.getElementById('loading').style.display = 'flex';
+        const key = getCurrentKey(); document.getElementById('loading').style.display = 'flex';
         db.matchHistory[key] = currentMatchData;
         try { 
             await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'}); 
@@ -470,7 +434,7 @@
 
     async function resetDatabase() {
         const pw = prompt("데이터 삭제 비밀번호?");
-        if (pw === "7640" && confirm("초기화할까요?")) {
+        if (pw === "7640" && confirm("모든 기록을 초기화할까요?")) {
             document.getElementById('loading').style.display = 'flex';
             db = { matchHistory: {} };
             try { await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'}); alert("초기화됨"); updateUI(); }
@@ -481,25 +445,15 @@
     function showVersusStats(name) {
         if(!db.matchHistory) return;
         document.getElementById('recordModalTitle').innerText = `🔥 ${name} vs 상대 전적`;
-        let vsStats = {}; 
-        const start = document.getElementById('statsStart').value;
-        const end = document.getElementById('statsEnd').value;
-
+        let vsStats = {}; const start = document.getElementById('statsStart').value, end = document.getElementById('statsEnd').value;
         Object.keys(db.matchHistory).forEach(key => {
-            const dStr = key.substring(0, 10);
-            if((start && dStr < start) || (end && dStr > end)) return;
+            const dStr = key.substring(0, 10); if((start && dStr < start) || (end && dStr > end)) return;
             const m = db.matchHistory[key]; if(!m || !m.results) return;
-            
             m.lineups.forEach(l => {
                 const res = m.results[l.id]; if(!res) return;
-                const teamA = l.pA, teamB = l.pB;
-                const isA = teamA.includes(name), isB = teamB.includes(name);
-                const matchType = l.type;
-                
+                const teamA = l.pA, teamB = l.pB, isA = teamA.includes(name), isB = teamB.includes(name), matchType = l.type;
                 if(isA || isB) {
-                    const oppTeam = isA ? teamB : teamA;
-                    const won = (isA && res === 'A') || (isB && res === 'B');
-                    
+                    const oppTeam = isA ? teamB : teamA, won = (isA && res === 'A') || (isB && res === 'B');
                     oppTeam.forEach(opp => {
                         if(!vsStats[opp]) vsStats[opp] = { singles: { win: 0, total: 0 }, doubles: { win: 0, total: 0 } };
                         if(matchType === '단식') { vsStats[opp].singles.total++; if(won) vsStats[opp].singles.win++; }
@@ -508,17 +462,13 @@
                 }
             });
         });
-
         let sorted = Object.entries(vsStats).sort((a,b) => (b[1].singles.total + b[1].doubles.total) - (a[1].singles.total + a[1].doubles.total));
         let html = `<table><tr><th>상대</th><th>총 게임</th><th>상세 전적 (승/전)</th></tr>`;
         sorted.forEach(([n, d]) => {
-            const s = d.singles, db = d.doubles;
-            const sRate = s.total > 0 ? Math.round((s.win/s.total)*100) : 0;
-            const dbRate = db.total > 0 ? Math.round((db.win/db.total)*100) : 0;
+            const s = d.singles, db = d.doubles, sRate = s.total > 0 ? Math.round((s.win/s.total)*100) : 0, dbRate = db.total > 0 ? Math.round((db.win/db.total)*100) : 0;
             html += `<tr><td><b class="rank-name">${n}</b></td><td>${s.total + db.total}</td><td style="text-align:left; padding-left:10px;">
                 <span class="vs-detail">🏓👤 단식: <b>${s.win}</b>/${s.total}<span class="vs-detail-rate">(${sRate}%)</span></span>
-                <span class="vs-detail">🏓🏓 복식: <b>${db.win}</b>/${db.total}<span class="vs-detail-rate">(${dbRate}%)</span></span>
-            </td></tr>`;
+                <span class="vs-detail">🏓🏓 복식: <b>${db.win}</b>/${db.total}<span class="vs-detail-rate">(${dbRate}%)</span></span></td></tr>`;
         });
         document.getElementById('recordTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; padding:20px;'>기록 없음</p>";
         openModal('recordModal');
@@ -527,11 +477,9 @@
     function updateUI() {
         if(!db.matchHistory) return;
         let stats = {}; fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        const start = document.getElementById('statsStart').value;
-        const end = document.getElementById('statsEnd').value;
+        const start = document.getElementById('statsStart').value, end = document.getElementById('statsEnd').value;
         Object.keys(db.matchHistory).forEach(key => {
-            const dStr = key.substring(0, 10);
-            if((start && dStr < start) || (end && dStr > end)) return;
+            const dStr = key.substring(0, 10); if((start && dStr < start) || (end && dStr > end)) return;
             const m = db.matchHistory[key]; if(!m || !m.results) return;
             m.lineups.forEach(l => {
                 const res = m.results[l.id]; if(!res) return;
@@ -543,13 +491,7 @@
         let sorted = Object.entries(stats).filter(x=>x[1].total>0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
         let html = `<table><tr><th>순위</th><th>이름</th><th>게임</th><th>승</th><th>승률</th></tr>`;
         sorted.forEach(([n, d], i) => { 
-            html += `<tr>
-                <td class="rank-num">${i+1}</td>
-                <td><b class="clickable-name rank-name" onclick="showVersusStats('${n}')">${n}</b></td>
-                <td style="font-size:14px;">${d.total}</td>
-                <td style="font-size:14px;">${d.win}</td>
-                <td><b class="rank-winrate" style="color:var(--primary)">${((d.win/d.total)*100).toFixed(1)}%</b></td>
-            </tr>`; 
+            html += `<tr><td class="rank-num">${i+1}</td><td><b class="clickable-name rank-name" onclick="showVersusStats('${n}')">${n}</b></td><td>${d.total}</td><td>${d.win}</td><td><b class="rank-winrate" style="color:var(--primary)">${((d.win/d.total)*100).toFixed(1)}%</b></td></tr>`; 
         });
         document.getElementById('rankingTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center;'>기록 없음</p>";
     }
@@ -570,17 +512,5 @@
         }
     }
 </script>
-    <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js");
-}
-</script>
-
 </body>
-
 </html>
-
-
-
-
-
