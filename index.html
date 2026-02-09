@@ -16,14 +16,25 @@
     <meta name="apple-mobile-web-app-title" content="탁구 DB">
 
     <style>
-        :root { --primary: #2e7d32; --secondary: #1976d2; --danger: #d32f2f; --bg: #f8f9fa; --card-bg: #ffffff; --btn-gray: #607d8b; }
+        /* [색상 상자] 프로그램에서 사용할 색깔들을 미리 정해두는 곳이에요 */
+        :root { 
+            --primary: #2e7d32; 
+            --secondary: #1976d2; 
+            --danger: #d32f2f; 
+            --bg: #f8f9fa; 
+            --card-bg: #ffffff; 
+            --btn-gray: #607d8b; 
+        }
         
+        /* [첫 화면] 앱을 켜면 나타나는 로딩 화면의 스타일이에요 */
         #intro-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: white; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
             z-index: 20000; 
             animation: fadeOut 0.5s forwards; animation-delay: 2.5s;
         }
+        
         #intro-layer img {
             width: 85%; max-width: 350px;
             opacity: 0;
@@ -32,6 +43,7 @@
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
         }
+        
         .intro-text {
             margin-top: 20px;
             font-size: 14px;
@@ -41,17 +53,43 @@
             animation: fadeIn 0.5s forwards;
             animation-delay: 0.2s;
         }
+        
+        /* [움직임 효과] 화면이 나타나고 사라지는 마법 같은 효과예요 */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.4; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .header-container { margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; flex-direction: column; }
-        .header-title { color: var(--primary); margin: 0; font-size: 1.3em; font-weight: 800; text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        /* [몸체 스타일] 글자 크기, 배경색 등 전체적인 외형이에요 */
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: var(--bg); 
+            margin: 0; padding: 10px; 
+            color: #333; line-height: 1.4; 
+        }
+        
+        .container { 
+            max-width: 500px; margin: auto; 
+            background: white; padding: 15px; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        }
+        
+        .header-container { 
+            margin-bottom: 15px; border-bottom: 2px solid #eee; 
+            padding-bottom: 10px; display: flex; flex-direction: column; 
+        }
+        
+        .header-title { 
+            color: var(--primary); margin: 0; 
+            font-size: 1.3em; font-weight: 800; 
+            text-align: center; width: 100%; 
+            display: flex; align-items: center; 
+            justify-content: center; gap: 5px; 
+        }
         
         .version-tag { font-size: 10px; color: #ccc; font-weight: normal; margin-top: 3px; }
         .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
 
+        /* [카드 상자] 입력칸들을 감싸는 예쁜 박스예요 */
         .box { 
             background: var(--card-bg); 
             padding: 15px; 
@@ -60,12 +98,16 @@
             border: 1px solid rgba(0,0,0,0.07);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         }
+        
         .flex-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
         .input-group { flex: 1; display: flex; flex-direction: column; }
         .filter-label { font-size: 10px; font-weight: bold; color: #888; margin-bottom: 3px; padding-left: 2px; }
+        
+        /* [버튼과 입력창] 누르고 글씨 쓰는 칸들의 디자인이에요 */
         select, input, button { font-size: 14px !important; }
         select, input { padding: 8px; border-radius: 10px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; height: 40px; }
         button { border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+        
         .btn-blue { background-color: var(--secondary); color: white; }
         .btn-orange { background-color: #ff9800; color: white; margin-top: 8px; }
         .btn-red { background-color: var(--danger); color: white; margin-top: 15px; padding: 6px; opacity: 0.7; font-size: 11px !important; }
@@ -74,13 +116,16 @@
         .switch-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .switch-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
+        /* [참여자 목록] 사람 이름을 고르는 바둑판 모양이에요 */
         .player-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
         .player-item { background: #f9f9f9; padding: 8px 12px; border-radius: 10px; border: 1px solid #eee; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .player-item input { width: 16px; height: 16px; margin: 0; }
         
+        /* [전광판] 현재 점수를 보여주는 검은색 판이에요 */
         .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #2c3e50; color: white; padding: 15px; border-radius: 18px; margin: 12px 0; }
         .score-num { font-size: 2.5em; font-weight: 900; }
         
+        /* [대진 카드] 누가 누구랑 붙는지 보여주는 카드예요 */
         .match-card { 
             background: #fff; 
             border-radius: 14px; 
@@ -95,21 +140,29 @@
         .selected-a { background: var(--secondary) !important; color: white !important; }
         .selected-b { background: var(--danger) !important; color: white !important; }
         
+        /* [라벨] 단식인지 복식인지 알려주는 꼬리표예요 */
         .type-badge { padding: 2px 6px; border-radius: 6px; font-weight: bold; font-size: 10px; color: white; margin-left: 6px; }
         .type-singles { background-color: #9c27b0; }
         .type-doubles { background-color: #009688; }
         
+        /* [승리 확률] 누가 이길 것 같은지 숫자로 보여줘요 */
         .win-prob { font-size: 13px; color: #aaa; font-weight: normal; margin: 0 4px; }
         .win-prob.high { color: #ff5722; font-weight: 800; }
         
+        /* [로딩 창] 데이터를 가져올 때 빙글빙글 도는 화면이에요 */
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 10000; justify-content: center; align-items: center; font-weight: bold; }
+        
+        /* [모달 팝업] 화면 위에 붕 떠서 나타나는 작은 창이에요 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 11000; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 420px; position: relative; max-height: 80vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
         .modal-close-x { font-size: 28px; color: #aaa; cursor: pointer; line-height: 1; }
+        
+        /* [축하 가루] 우승했을 때 하늘에서 내리는 종이가루예요 */
         .confetti { position: fixed; width: 8px; height: 8px; z-index: 12000; top: -10px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
         
+        /* [표] 통계치를 보여주는 표의 디자인이에요 */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th { background: var(--primary); color: white; padding: 10px 4px; font-size: 13px; }
         td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #eee; }
@@ -142,39 +195,61 @@
 </div>
 
 <div id="loading">데이터 동기화 중...</div>
+
 <div class="container">
     <div class="header-container">
-        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.2</span></div>
+        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.23</span></div>
+        <div class="header-subtitle" style="margin-top: 5px;">Since '26.2/9</div>
         <div class="header-subtitle">Designed by KS</div>
     </div>
     
     <div class="box">
         <div class="flex-row">
-            <div class="input-group" style="flex: 1.5;"><label class="filter-label">날짜</label><input type="date" id="matchDate" onchange="checkDateData()"></div>
-            <div class="input-group"><label class="filter-label">시간</label><select id="matchTime" onchange="checkDateData()"><option value="lunch">점심</option><option value="dinner">저녁</option></select></div>
-            <div class="input-group"><label class="filter-label">회차</label><select id="matchSession" onchange="checkDateData()">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-            </select></div>
+            <div class="input-group" style="flex: 1.5;">
+                <label class="filter-label">날짜</label>
+                <input type="date" id="matchDate" onchange="checkDateData()">
+            </div>
+            <div class="input-group">
+                <label class="filter-label">시간</label>
+                <select id="matchTime" onchange="checkDateData()">
+                    <option value="lunch">점심</option>
+                    <option value="dinner">저녁</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label class="filter-label">회차</label>
+                <select id="matchSession" onchange="checkDateData(); render();">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+            </div>
         </div>
         <div id="dateStatus" style="text-align:center; font-size: 11px; margin-bottom:10px; font-weight: bold;"></div>
         
         <div style="margin-top: 5px;">
             <button class="btn-blue" onclick="openModal('playerModal')">👥 참여자 선택 (<span id="selectedCountText">0</span>명)</button>
             <div class="flex-row" style="margin-top:8px;">
-                <div class="input-group"><label class="filter-label">방식</label><select id="gameMode">
-                    <option value="mixed">혼합(복/단)</option>
-                    <option value="doubles">전부 복식</option>
-                    <option value="singles">전부 단식</option>
-                </select></div>
-                <div class="input-group"><label class="filter-label">승리 기준</label><select id="winCondition">
-                    <option value="1">단판!</option>
-                    <option value="3">3판 2선승</option>
-                    <option value="5">5판 3선승</option>
-                    <option value="7">7판 4선승</option>
-                    <option value="9">9판 5선승</option>
-                    <option value="11">11판 6선승</option>
-                </select></div>
+                <div class="input-group">
+                    <label class="filter-label">방식</label>
+                    <select id="gameMode">
+                        <option value="mixed">혼합(복/단)</option>
+                        <option value="doubles">전부 복식</option>
+                        <option value="singles">전부 단식</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="filter-label">승리 기준</label>
+                    <select id="winCondition">
+                        <option value="1">단판!</option>
+                        <option value="3">3판 2선승</option>
+                        <option value="5">5판 3선승</option>
+                        <option value="7">7판 4선승</option>
+                        <option value="9">9판 5선승</option>
+                        <option value="11">11판 6선승</option>
+                    </select>
+                </div>
             </div>
             <div class="switch-container">
                 <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙(실력순)</div>
@@ -186,9 +261,15 @@
 
     <div id="matchArea" style="display:none;">
         <div class="scoreboard">
-            <div style="text-align:center;"><div id="scoreA" class="score-num" style="color:#64b5f6;">0</div><div style="font-size:11px;">TEAM A</div></div>
+            <div style="text-align:center;">
+                <div id="scoreA" class="score-num" style="color:#64b5f6;">0</div>
+                <div style="font-size:11px;">TEAM A</div>
+            </div>
             <div style="font-size:1.5em; opacity:0.3;">VS</div>
-            <div style="text-align:center;"><div id="scoreB" class="score-num" style="color:#f28b82;">0</div><div style="font-size:11px;">TEAM B</div></div>
+            <div style="text-align:center;">
+                <div id="scoreB" class="score-num" style="color:#f28b82;">0</div>
+                <div style="font-size:11px;">TEAM B</div>
+            </div>
         </div>
         <div id="teamPreviewArea"></div>
         <div id="lineupArea"></div>
@@ -204,8 +285,14 @@
             <button class="btn-p" onclick="setQuickPeriod(3, this)">3개월</button>
         </div>
         <div class="flex-row">
-            <div class="input-group"><label class="filter-label">시작일</label><input type="date" id="statsStart" onchange="updateUI()"></div>
-            <div class="input-group"><label class="filter-label">종료일</label><input type="date" id="statsEnd" onchange="updateUI()"></div>
+            <div class="input-group">
+                <label class="filter-label">시작일</label>
+                <input type="date" id="statsStart" onchange="updateUI()">
+            </div>
+            <div class="input-group">
+                <label class="filter-label">종료일</label>
+                <input type="date" id="statsEnd" onchange="updateUI()">
+            </div>
         </div>
         
         <h4 style="font-size:13px; border-left:3px solid var(--primary); padding-left:8px; margin:15px 0 5px 0;">🏆 승률 랭킹</h4>
@@ -251,18 +338,46 @@
 </div>
 
 <script>
+    /* [데이터 저장소] 구글 스프레드시트와 통신하는 주소예요 */
     const API_URL = "https://script.google.com/macros/s/AKfycbzTImCgYtXbc4yN3VSNahYj6MKi9c36GZkF7rt8ofkE8asQWd95deMk05D8rHJMc06v/exec"; 
+
+    /*  테스트 DB 주소 : https://script.google.com/macros/s/AKfycbztrs5aqu_1RW_w-H0LzsszCivwGhh-fkHFtouGKlYYohwhPWtCbeORWcw1mzsTFoKJ/exec  */
+    /*  배포 DB 주소 : https://script.google.com/macros/s/AKfycbzTImCgYtXbc4yN3VSNahYj6MKi9c36GZkF7rt8ofkE8asQWd95deMk05D8rHJMc06v/exec  */
+
+    /* [시간 체크] 정해진 시간에만 사용할 수 있게 검사하는 기능이에요 */
+    function checkAccess() {
+        const now = new Date();
+        const day = now.getDay(); 
+        const hour = now.getHours();
+        const min = now.getMinutes();
+        const currentTime = hour * 100 + min;
+
+        const isWeekday = (day >= 1 && day <= 5);
+        const isLunchTime = (currentTime >= 1130 && currentTime <= 1300);
+        const isDinnerTime = (currentTime >= 1700 && currentTime <= 1900);
+
+        if (isWeekday && (isLunchTime || isDinnerTime)) {
+            return true;
+        } else {
+            const msg = !isWeekday ? "주말은 게임 가능 시간이 아닙니다." : "게임 가능 시간이 아닙니다. (평일 11:30~13:00 / 17:00~19:00)";
+            const password = prompt(msg + "\n계속 진행하시려면 관리자 암호를 입력하세요.");
+            return (password === "7640"); 
+        }
+    }
+
     const fixedList = ["김기협", "김학기", "김현진", "이경상", "이명철", "이주항", "이준호", "이진행", "김용범", "이석현", "조커1", "조커2"];
     let db = { matchHistory: {}, moneyHistory: [] }; 
     let currentMatchData = null;
     let currentBalanceMode = 'tight';
     let isAlreadySaved = false;
 
+    /* 앱이 켜지자마자 실행되는 부분이에요 */
     window.onload = function() {
         const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
         document.getElementById('matchDate').value = today;
         document.getElementById('statsEnd').value = today;
-        initPlayerList(); syncWithCloud();
+        initPlayerList(); 
+        syncWithCloud();
     };
 
     function setBalanceMode(mode) {
@@ -271,12 +386,19 @@
         document.getElementById('balance_random').classList.toggle('active', mode === 'random');
     }
 
+    /* 선수 목록을 화면에 그려주는 함수예요 */
     function initPlayerList() {
-        const grid = document.getElementById('playerGrid'); grid.innerHTML = "";
+        const grid = document.getElementById('playerGrid'); 
+        grid.innerHTML = "";
         fixedList.forEach(name => {
-            const div = document.createElement('div'); div.className = "player-item";
+            const div = document.createElement('div'); 
+            div.className = "player-item";
             div.innerHTML = `<input type="checkbox" name="player" value="${name}"> <span>${name}</span>`;
-            div.onclick = function(e) { const cb = this.querySelector('input'); if(e.target !== cb) cb.checked = !cb.checked; updateCount(); };
+            div.onclick = function(e) { 
+                const cb = this.querySelector('input'); 
+                if(e.target !== cb) cb.checked = !cb.checked; 
+                updateCount(); 
+            };
             grid.appendChild(div);
         });
     }
@@ -288,6 +410,7 @@
     function closeClickOut(e, id) { if(e.target.id === id) closeModal(id); }
     function getCurrentKey() { return `${document.getElementById('matchDate').value}_${document.getElementById('matchTime').value}_s${document.getElementById('matchSession').value}`; }
 
+    /* 인터넷 너머 클라우드에서 데이터를 가져와요 */
     async function syncWithCloud() {
         try { 
             const response = await fetch(`${API_URL}?t=${Date.now()}`);
@@ -297,10 +420,12 @@
                 if(!db.matchHistory) db.matchHistory = {}; 
                 if(!db.moneyHistory) db.moneyHistory = []; 
             }
-            updateUI(); checkDateData();
+            updateUI(); 
+            checkDateData();
         } catch(e) { console.error(e); }
     }
 
+    /* 선택한 날짜에 이미 경기가 있었는지 확인해요 */
     function checkDateData() {
         const key = getCurrentKey();
         const matchData = db.matchHistory[key];
@@ -318,10 +443,11 @@
         }
     }
 
+    /* 승률 순위를 계산해서 화면에 보여주는 아주 중요한 기능이에요 */
     function updateUI() {
         if(!db.matchHistory) return;
         let stats = {}; 
-        let moneyStats = {}; // {이름: {money: 0, loses: 0}}
+        let moneyStats = {}; 
         fixedList.forEach(n => {
             stats[n] = { win: 0, total: 0 };
             moneyStats[n] = { money: 0, loses: 0 };
@@ -330,7 +456,6 @@
         const start = document.getElementById('statsStart').value;
         const end = document.getElementById('statsEnd').value;
 
-        // 승률 통계 및 패배수 계산
         Object.keys(db.matchHistory).forEach(key => {
             const dStr = key.substring(0, 10);
             if((start && dStr < start) || (end && dStr > end)) return;
@@ -346,7 +471,6 @@
             });
         });
 
-        // 게임비 통계 (누적 기부액)
         if(db.moneyHistory) {
             db.moneyHistory.forEach(entry => {
                 if((start && entry.date < start) || (end && entry.date > end)) return;
@@ -354,7 +478,6 @@
             });
         }
 
-        // 승률 랭킹 출력
         let sorted = Object.entries(stats).filter(x=>x[1].total>0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
         let html = `<table><tr><th>순위</th><th>이름</th><th>게임</th><th>승</th><th>승률</th></tr>`;
         sorted.forEach(([n, d], i) => { 
@@ -362,7 +485,6 @@
         });
         document.getElementById('rankingTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기록 없음</p>";
 
-        // 게임비 랭킹 출력
         let mSorted = Object.entries(moneyStats).filter(x => x[1].money > 0 || x[1].loses > 0).sort((a,b) => b[1].money - a[1].money);
         let mHtml = `<table><tr><th>순위</th><th>이름</th><th>패배수</th><th>기부액</th></tr>`;
         mSorted.forEach(([n, d], i) => {
@@ -371,6 +493,7 @@
         document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
     }
 
+    /* 특정 선수를 눌렀을 때 상대방이랑 어떻게 싸웠는지 보여줘요 */
     function showVersusStats(name) {
         if(!db.matchHistory) return;
         document.getElementById('recordModalTitle').innerText = `🔥 ${name} vs 상대 전적`;
@@ -410,26 +533,28 @@
     }
 
     function setQuickPeriod(m, btn) {
-        document.querySelectorAll('.btn-p').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-        const start = new Date(); if(m === 0) document.getElementById('statsStart').value = "";
+        document.querySelectorAll('.btn-p').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active');
+        const start = new Date(); 
+        if(m === 0) document.getElementById('statsStart').value = "";
         else { start.setMonth(start.getMonth() - m); document.getElementById('statsStart').value = start.toISOString().split('T')[0]; }
         updateUI();
     }
 
+    /* [지능형 생성] 대진표를 짤 때 똑똑하게 고민해서 만드는 함수예요 */
     function handleSmartStart() {
+        if (!checkAccess()) return; 
         const d = document.getElementById('matchDate').value;
         const t = document.getElementById('matchTime').value;
         const s = document.getElementById('matchSession').value;
         const key = `${d}_${t}_s${s}`;
         
         if (db.matchHistory && db.matchHistory[key]) {
-            // 빈 회차 찾기
             let nextS = -1;
             for (let i = 1; i <= 10; i++) {
                 if (!db.matchHistory[`${d}_${t}_s${i}`]) { nextS = i; break; }
             }
             
-            // 1. 다음 빈 회차 제안 (먼저 물어봄)
             if (nextS !== -1) {
                 if (confirm(`현재 ${s}회차는 이미 기록이 있습니다.\n다음 빈 회차(${nextS}회차)로 이동하여 대진표를 생성하시겠습니까?`)) {
                     document.getElementById('matchSession').value = nextS;
@@ -440,7 +565,6 @@
                 }
             }
 
-            // 2. 덮어씌우기 더블 체크 (위에서 거절했을 때)
             if (confirm(`현재 회차(${s}회차)의 기록을 덮어씌우시겠습니까?`)) {
                 if (confirm(`⚠️ 정말로 덮어씌우시겠습니까?\n기존 데이터는 완전히 삭제되며 복구할 수 없습니다.`)) {
                     isAlreadySaved = true;
@@ -452,173 +576,190 @@
             startMatching(); 
         }
     }
-// ==========================================
-// 개선된 지능형 대진 생성 로직 (박빙 & 로테이션 보장)
-// ==========================================
-function startMatching() {
-    const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
-    if (selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
 
-    // [기존 실력 데이터 수집 로직 유지]
-    let stats = {}; 
-    fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-    Object.values(db.matchHistory).forEach(m => {
-        if(!m.results) return;
-        m.lineups.forEach(l => {
-            const res = m.results[l.id]; if(!res) return;
-            const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-            win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-            lose.forEach(p => { if(stats[p]) stats[p].total++; });
+    /* [대진 알고리즘] 박빙의 승부를 위해 팀을 나누는 수학적 로직이에요 */
+    function startMatching() {
+        const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
+        if (selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
+
+        let stats = {}; 
+        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+        Object.values(db.matchHistory).forEach(m => {
+            if(!m.results) return;
+            m.lineups.forEach(l => {
+                const res = m.results[l.id]; if(!res) return;
+                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+                lose.forEach(p => { if(stats[p]) stats[p].total++; });
+            });
         });
-    });
-    const winRates = {};
-    fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        const winRates = {};
+        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
 
-    // [조건 0] 팀 나누기 (승률 기반 Snake Draft)
-    let aPool = [], bPool = [];
-    if (currentBalanceMode === 'tight') {
-        const sorted = [...selected].sort((p1, p2) => winRates[p2] - winRates[p1]);
-        sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
-    } else {
-        const shuffled = [...selected].sort(() => Math.random() - 0.5);
-        shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
-    }
+        let aPool = [], bPool = [];
+        if (currentBalanceMode === 'tight') {
+            const sorted = [...selected].sort((p1, p2) => winRates[p2] - winRates[p1]);
+            sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
+        } else {
+            const shuffled = [...selected].sort(() => Math.random() - 0.5);
+            shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
+        }
 
-    const wc = parseInt(document.getElementById('winCondition').value) || 1;
-    const mode = document.getElementById('gameMode').value;
-    
-    // 회차 내 히스토리 추적 변수 (조건 1~4용)
-    let oppPairHistory = [];     // [조건 1] 상대팀 조합 이력
-    let partnerPairHistory = []; // [조건 2] 파트너 조합 이력
-    let singlesPlayCount = {};   // [조건 3] 단식 출전 횟수
-    selected.forEach(p => singlesPlayCount[p] = 0);
-    let consecutiveCount = {};   // [조건 4] 연속 출전 횟수
-    selected.forEach(p => consecutiveCount[p] = 0);
-    
-    currentMatchData = { teams: { a: aPool, b: bPool }, lineups: [], results: {}, config: { winCon: wc } };
+        const wc = parseInt(document.getElementById('winCondition').value) || 1;
+        const mode = document.getElementById('gameMode').value;
+        
+        let oppPairHistory = [];     
+        let partnerPairHistory = []; 
+        let singlesPlayCount = {};   
+        selected.forEach(p => singlesPlayCount[p] = 0);
+        let consecutiveCount = {};   
+        selected.forEach(p => consecutiveCount[p] = 0);
+        
+        currentMatchData = { teams: { a: aPool, b: bPool }, lineups: [], results: {}, config: { winCon: wc } };
 
-    for (let i = 1; i <= wc; i++) {
-        let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
-        if (aPool.length < 2 || bPool.length < 2) isDoubles = false;
+        for (let i = 1; i <= wc; i++) {
+            let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
+            if (aPool.length < 2 || bPool.length < 2) isDoubles = false;
 
-        let bestMatch = null;
-        let minPenalty = Infinity;
+            let bestMatch = null;
+            let minPenalty = Infinity;
 
-        // 가능한 모든 대진 후보 평가
-        if (isDoubles) {
-            for (let a1 of aPool) for (let a2 of aPool) {
-                if (a1 === a2) continue;
-                for (let b1 of bPool) for (let b2 of bPool) {
-                    if (b1 === b2) continue;
-                    const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
-                    let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
-                    if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+            if (isDoubles) {
+                for (let a1 of aPool) for (let a2 of aPool) {
+                    if (a1 === a2) continue;
+                    for (let b1 of bPool) for (let b2 of bPool) {
+                        if (b1 === b2) continue;
+                        const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
+                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                        if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                    }
+                }
+            } else {
+                for (let pa of aPool) for (let pb of bPool) {
+                    const pA = [pa], pB = [pb];
+                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                    if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
                 }
             }
-        } else {
-            for (let pa of aPool) for (let pb of bPool) {
-                const pA = [pa], pB = [pb];
-                let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
-                if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
+
+            const playersThisMatch = [...bestMatch.pA, ...bestMatch.pB];
+            if (bestMatch.type === '복식') {
+                partnerPairHistory.push(bestMatch.pA.join('|'), bestMatch.pB.join('|'));
+            } else {
+                bestMatch.pA.concat(bestMatch.pB).forEach(p => singlesPlayCount[p]++);
             }
+            bestMatch.pA.forEach(a => bestMatch.pB.forEach(b => oppPairHistory.push([a, b].sort().join('|'))));
+            
+            selected.forEach(p => {
+                if (playersThisMatch.includes(p)) consecutiveCount[p]++;
+                else consecutiveCount[p] = 0;
+            });
+
+            const avgA = bestMatch.pA.reduce((s, p) => s + winRates[p], 0) / bestMatch.pA.length;
+            const avgB = bestMatch.pB.reduce((s, p) => s + winRates[p], 0) / bestMatch.pB.length;
+            const probA = Math.round(avgA / (avgA + avgB) * 100) || 50;
+
+            currentMatchData.lineups.push({ id: i, pA: bestMatch.pA, pB: bestMatch.pB, type: bestMatch.type, probA: probA });
         }
 
-        // 최적 매치 확정 및 상태 업데이트
-        const playersThisMatch = [...bestMatch.pA, ...bestMatch.pB];
-        if (bestMatch.type === '복식') {
-            partnerPairHistory.push(bestMatch.pA.join('|'), bestMatch.pB.join('|'));
-        } else {
-            bestMatch.pA.concat(bestMatch.pB).forEach(p => singlesPlayCount[p]++);
+        document.getElementById('matchArea').style.display = 'block';
+        document.getElementById('teamPreviewArea').innerHTML = `
+            <span class="team-label-a">TEAM A</span><br>${aPool.join(', ')}<br>
+            <span class="vs-divider">— VS —</span>
+            <span class="team-label-b">TEAM B</span><br>${bPool.join(', ')}`;
+        render();
+    }
+
+    /* 점수를 매겨서 최선의 대진을 고르는 점수판이에요 */
+    function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates) {
+        let penalty = 0;
+        const currentAll = [...pA, ...pB];
+        const avgA = pA.reduce((s, p) => s + winRates[p], 0) / pA.length;
+        const avgB = pB.reduce((s, p) => s + winRates[p], 0) / pB.length;
+        penalty += Math.abs(avgA - avgB) * 100;
+
+        pA.forEach(a => pB.forEach(b => {
+            const pair = [a, b].sort().join('|');
+            penalty += oppHist.filter(h => h === pair).length * 1000;
+        }));
+
+        if (type === '복식') {
+            penalty += partHist.filter(h => h === pA.join('|') || h === pB.join('|')).length * 2000;
         }
-        bestMatch.pA.forEach(a => bestMatch.pB.forEach(b => oppPairHistory.push([a, b].sort().join('|'))));
-        
-        // [조건 4] 연속 출전 카운트 업데이트
-        selected.forEach(p => {
-            if (playersThisMatch.includes(p)) consecutiveCount[p]++;
-            else consecutiveCount[p] = 0;
+
+        if (type === '단식') {
+            currentAll.forEach(p => penalty += singHist[p] * 5000);
+        }
+
+        currentAll.forEach(p => {
+            if (consHist[p] >= 2) penalty += 10000;
+            else if (consHist[p] === 1) penalty += 50; 
         });
 
-        // 승률 예측 및 데이터 삽입
-        const avgA = bestMatch.pA.reduce((s, p) => s + winRates[p], 0) / bestMatch.pA.length;
-        const avgB = bestMatch.pB.reduce((s, p) => s + winRates[p], 0) / bestMatch.pB.length;
-        const probA = Math.round(avgA / (avgA + avgB) * 100) || 50;
-
-        currentMatchData.lineups.push({ id: i, pA: bestMatch.pA, pB: bestMatch.pB, type: bestMatch.type, probA: probA });
+        return penalty + Math.random(); 
     }
 
-    // UI 출력
-    document.getElementById('matchArea').style.display = 'block';
-    document.getElementById('teamPreviewArea').innerHTML = `
-        <span class="team-label-a">TEAM A</span><br>${aPool.join(', ')}<br>
-        <span class="vs-divider">— VS —</span>
-        <span class="team-label-b">TEAM B</span><br>${bPool.join(', ')}`;
-    render();
-}
-
-/**
- * 페널티 계산기: 점수가 낮을수록 5가지 조건에 적합한 대진임
- */
-function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates) {
-    let penalty = 0;
-    const currentAll = [...pA, ...pB];
-
-    // [조건 0] 실력 밸런스 (승률 차이 비례 페널티)
-    const avgA = pA.reduce((s, p) => s + winRates[p], 0) / pA.length;
-    const avgB = pB.reduce((s, p) => s + winRates[p], 0) / pB.length;
-    penalty += Math.abs(avgA - avgB) * 100;
-
-    // [조건 1] 상대팀 로테이션 (이미 붙었던 조합이면 강한 페널티)
-    pA.forEach(a => pB.forEach(b => {
-        const pair = [a, b].sort().join('|');
-        penalty += oppHist.filter(h => h === pair).length * 1000;
-    }));
-
-    // [조건 2] 파트너 로테이션 (이미 같은 팀이었던 복식조면 강한 페널티)
-    if (type === '복식') {
-        penalty += partHist.filter(h => h === pA.join('|') || h === pB.join('|')).length * 2000;
-    }
-
-    // [조건 3] 단식 전원 출전 (단식 횟수가 많은 사람일수록 매우 강한 페널티)
-    if (type === '단식') {
-        currentAll.forEach(p => penalty += singHist[p] * 5000);
-    }
-
-    // [조건 4] 3경기 연속 금지 (2연속 뛴 사람이 또 들어오면 최고 페널티)
-    currentAll.forEach(p => {
-        if (consHist[p] >= 2) penalty += 10000;
-        else if (consHist[p] === 1) penalty += 50; // 1번 연속은 적당히 피함
-    });
-
-    return penalty + Math.random(); // 완전 동일 점수 대비 무작위성 가미
-}
-
+    /* 화면에 대진표와 기부 내역을 그려주는 함수예요 */
     function render() {
         if(!currentMatchData || !currentMatchData.lineups) return;
-        const area = document.getElementById('lineupArea'); area.innerHTML = "";
-        let wA=0, wB=0; if(!currentMatchData.results) currentMatchData.results = {};
+        const area = document.getElementById('lineupArea'); 
+        area.innerHTML = "";
+        let wA=0, wB=0; 
+        if(!currentMatchData.results) currentMatchData.results = {};
         Object.values(currentMatchData.results).forEach(v => (v==='A'?wA++:(v==='B'?wB++:0)));
-        document.getElementById('scoreA').innerText = wA; document.getElementById('scoreB').innerText = wB;
+        document.getElementById('scoreA').innerText = wA; 
+        document.getElementById('scoreB').innerText = wB;
+        
         currentMatchData.lineups.forEach(m => {
             const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
             const probA = m.probA || 50;
             const probB = 100 - probA;
-            const card = document.createElement('div'); card.className = 'match-card';
+            const card = document.createElement('div'); 
+            card.className = 'match-card';
             if(win) card.style.borderLeft = `8px solid ${win==='A'?'var(--secondary)':'var(--danger)'}`;
             card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${m.type}</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0; font-weight:bold;">
-                    <div style="flex:1.2; text-align:left;">${m.pA.join(', ')}</div>
+                    <div style="flex:1.2; text-align:left; font-size: 15px;">${m.pA.join(', ')}</div> 
                     <div style="flex:1.5; text-align:center;">
                         <span class="win-prob ${probA > probB ? 'high' : ''}">${probA}%</span> VS <span class="win-prob ${probB > probA ? 'high' : ''}">${probB}%</span>
                     </div>
-                    <div style="flex:1.2; text-align:right;">${m.pB.join(', ')}</div>
+                    <div style="flex:1.2; text-align:right; font-size: 15px;">${m.pB.join(', ')}</div>
                 </div>
                 <div class="match-btn-group"><button class="${win==='A'?'selected-a':''}" onclick="record(${m.id},'A')">A 승</button><button class="${win==='B'?'selected-b':''}" onclick="record(${m.id},'B')">B 승</button></div>`;
             area.appendChild(card);
         });
+
+        const date = document.getElementById('matchDate').value;
+        const session = document.getElementById('matchSession').value;
+        const time = document.getElementById('matchTime').value; // 현재 선택된 시간(lunch/dinner) 가져오기
+        const currentSessionMoney = db.moneyHistory.filter(m => 
+            m.date === date && 
+            String(m.session) === String(session) && 
+            m.time === time // 시간 조건 추가
+        );
+
+        if (currentSessionMoney.length > 0) {
+            const moneyDiv = document.createElement('div');
+            moneyDiv.style.cssText = "margin-top:20px; padding:15px; background:#fff9f0; border-radius:18px; border:1px solid #ffe0b2; box-shadow: 0 4px 12px rgba(0,0,0,0.05);";
+
+            let html = `<div style="font-size:13px; color:#e65100; font-weight:800; margin-bottom:10px;">
+                            <span>💰</span> ${session}회차 기부 내역
+                        </div>`;
+
+            currentSessionMoney.forEach(m => {
+                html += `<div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px dashed #ffe0b2;">
+                            <span style="color:#555;">${m.name}</span>
+                            <span style="font-weight:bold; color:#333;">${m.amount.toLocaleString()},000원</span>
+                         </div>`;
+            });
+
+            moneyDiv.innerHTML = html;
+            area.appendChild(moneyDiv);
+        }
     }
 
+    /* 승패 버튼을 눌렀을 때 실행되는 함수예요 */
     function record(id, w) {
-        // [수정] 이미 저장된 기록을 불러온 경우, 수정 시 더블 체크
         if (isAlreadySaved) {
             if (!confirm("기존에 저장된 경기 결과를 변경하시겠습니까?")) return;
             if (!confirm("변경 시 나중에 '최종 저장'을 눌러야 클라우드에 반영됩니다. 정말 진행할까요?")) return;
@@ -648,8 +789,8 @@ function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, w
         }
     }
 
+    /* 클라우드에 경기 결과를 영구적으로 저장해요 */
     async function saveToCloud(losers = []) {
-        // [수정] 덮어쓰기 저장 시 더블 체크
         if (isAlreadySaved || db.matchHistory[getCurrentKey()]) {
             if (!confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?")) return;
             if (!confirm("⚠️ 기존 데이터가 완전히 삭제되고 현재 결과로 대체됩니다. 정말 진행하시겠습니까?")) return;
@@ -662,24 +803,21 @@ function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, w
             alert("기록이 저장되었습니다."); 
             isAlreadySaved = true; 
             await syncWithCloud();
-            
             handlePostSavePopups(losers);
         } catch(e) { alert("저장 중 오류 발생"); } 
         finally { document.getElementById('loading').style.display = 'none'; }
     }
 
+    /* 저장이 끝나고 나서 똘똘말이나 게임비 입력을 물어봐요 */
     function handlePostSavePopups(losers) {
         if (!losers || losers.length === 0) return;
-
         if (losers.length > 1) {
-            // 똘똘말이 먼저 확인
             if (confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
                 applyToltol(losers);
             } else {
                 confirmMoneyInput(losers);
             }
         } else {
-            // 1명일 땐 바로 게임비 확인
             confirmMoneyInput(losers);
         }
     }
@@ -724,16 +862,25 @@ function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, w
     }
 
     async function saveMoneyAndFinish() {
+        closeModal('moneyInputModal');
+        if(!confirm("입력한 기부 금액을 정말 저장하시겠습니까?")) {
+            return; 
+        }
+
         const inputs = document.querySelectorAll('.money-input');
-        const today = document.getElementById('matchDate').value;
+        const date = document.getElementById('matchDate').value;
+        const session = document.getElementById('matchSession').value; 
         let hasData = false;
-        
+
         inputs.forEach(input => {
-            const amount = parseInt(input.value) || 0;
-            if (amount > 0) {
+            const amount = parseInt(input.value);
+            if(amount > 0) {
+                const time = document.getElementById('matchTime').value; // 시간 값 가져오기
                 db.moneyHistory.push({
-                    date: today,
-                    name: input.getAttribute('data-name'),
+                    date: date,
+                    session: session,
+                    time: time, // 시간 데이터 추가 저장
+                    name: input.dataset.name,
                     amount: amount
                 });
                 hasData = true;
@@ -742,26 +889,36 @@ function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, w
 
         if(hasData) {
             document.getElementById('loading').style.display = 'flex';
-            await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'});
-            document.getElementById('loading').style.display = 'none';
-            alert("기부액이 저장되었습니다.");
+            try {
+                await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'});
+                alert("기부액이 성공적으로 저장되었습니다.");
+            } catch(e) {
+                alert("저장 중 오류가 발생했습니다.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
         }
-        
-        closeModal('moneyInputModal');
         updateUI();
     }
 
+    /* 모든 데이터를 싹 지우는 무서운 기능이에요 (비밀번호 필요) */
     async function resetDatabase() {
         const pw = prompt("비밀번호?");
         if (pw === "7640" && confirm("초기화할까요?")) {
             document.getElementById('loading').style.display = 'flex';
             db = { matchHistory: {}, moneyHistory: [] };
-            try { await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'}); alert("초기화됨"); updateUI(); }
-            catch (e) { alert("오류"); } finally { document.getElementById('loading').style.display = 'none'; }
+            try { 
+                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'}); 
+                alert("초기화됨"); 
+                updateUI(); 
+            }
+            catch (e) { alert("오류"); } 
+            finally { document.getElementById('loading').style.display = 'none'; }
         }
     }
 
     function handleManualSave() { 
+        if (!checkAccess()) return; 
         if(confirm("최종 저장하시겠습니까?")) {
             let a=0, b=0;
             Object.values(currentMatchData.results).forEach(v=>(v==='A'?a++:(v==='B'?b++:0)));
@@ -770,8 +927,8 @@ function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, w
         } 
     }
 
+    /* 스마트폰에서 앱처럼 깔 수 있게 도와주는 도우미예요 */
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
 </script>
 </body>
 </html>
-
