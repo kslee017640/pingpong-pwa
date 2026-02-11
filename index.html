@@ -16,94 +16,148 @@
     <meta name="apple-mobile-web-app-title" content="탁구 DB">
 
     <style>
-        /* [색상 상자] 프로그램에서 사용할 색깔들을 미리 정해두는 곳이에요 */
+        /* [색상 및 기본 설정] */
         :root { 
             --primary: #2e7d32; 
             --secondary: #1976d2; 
             --danger: #d32f2f; 
             --bg: #f8f9fa; 
             --card-bg: #ffffff; 
-            --btn-gray: #607d8b; 
+            /* 1. 버튼 배경 (연두 -> 진초록 그라데이션) */
+            --home-btn-bg: linear-gradient(135deg, #66bb6a, #2e7d32);
+            /* 2. 버튼 그림자 (초록색 투명 그림자) */
+            --home-btn-shadow: rgba(46, 125, 50, 0.4);
         }
         
-        /* [첫 화면] 앱을 켜면 나타나는 로딩 화면의 스타일이에요 */
+        /* [인트로 비디오] 시간 4초로 변경 */
         #intro-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; display: flex; flex-direction: column; 
             justify-content: center; align-items: center;
             z-index: 20000; 
-            animation: fadeOut 0.5s forwards; animation-delay: 2.5s;
+            animation: fadeOut 0.5s forwards; animation-delay: 4.5s; /* 1초 연장됨 */
         }
         
-        #intro-layer img {
+        #intro-layer video {
             width: 85%; max-width: 350px;
             opacity: 0;
             animation: fadeIn 0.5s forwards;
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            outline: none;
         }
         
         .intro-text {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
-            font-weight: bold;
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
-            animation-delay: 0.2s;
+            margin-top: 20px; font-size: 14px; color: #666; font-weight: bold;
+            opacity: 0; animation: fadeIn 0.5s forwards; animation-delay: 0.2s;
         }
         
-        /* [움직임 효과] 화면이 나타나고 사라지는 마법 같은 효과예요 */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
-        /* [몸체 스타일] 글자 크기, 배경색 등 전체적인 외형이에요 */
         body { 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: var(--bg); 
-            margin: 0; padding: 10px; 
-            color: #333; line-height: 1.4; 
+            font-family: 'Pretendard', sans-serif; background-color: var(--bg); 
+            margin: 0; padding: 10px; color: #333; line-height: 1.4; font-size: 14px;
         }
         
+        /* 컨테이너 */
         .container { 
-            max-width: 500px; margin: auto; 
-            background: white; padding: 15px; 
-            border-radius: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            max-width: 500px; margin: auto; background: white; padding: 20px; 
+            border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); min-height: 85vh;
+            display: flex; flex-direction: column; 
+        }
+
+        /* [메인 메뉴 스타일] */
+        #mainMenuLayer {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+
+        .main-title-area {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* [수정됨] 타이틀 텍스트 그라데이션 적용, 이모지는 제외 */
+        .main-title-text {
+            font-size: 4.0em; 
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #1b5e20 0%, #66bb6a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));
+            display: inline-block;
         }
         
+        /* [수정됨] 이모지는 원래 색상 유지 */
+        .main-title-icon {
+            font-size: 4.0em;
+            vertical-align: top;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.2));
+        }
+
+        .version-tag-inline { 
+            font-size: 14px; 
+            background: #eee; 
+            color: #555; 
+            padding: 3px 8px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .main-footer-info {
+            text-align: center;
+            color: #bbb;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+
         .header-container { 
-            margin-bottom: 15px; border-bottom: 2px solid #eee; 
-            padding-bottom: 10px; display: flex; flex-direction: column; 
+            margin-bottom: 20px; border-bottom: 2px solid #eee; 
+            padding-bottom: 15px; display: flex; flex-direction: column; 
         }
-        
         .header-title { 
-            color: var(--primary); margin: 0; 
-            font-size: 1.3em; font-weight: 800; 
-            text-align: center; width: 100%; 
-            display: flex; align-items: center; 
+            color: var(--primary); margin: 0; font-size: 1.5em; font-weight: 800; 
+            text-align: center; width: 100%; display: flex; align-items: center; 
             justify-content: center; gap: 5px; 
         }
-        
-        .version-tag { font-size: 10px; color: #ccc; font-weight: normal; margin-top: 3px; }
-        .header-subtitle { font-size: 9px; color: #bbb; font-weight: normal; align-self: flex-end; margin-top: 4px; }
 
-        /* [카드 상자] 입력칸들을 감싸는 예쁜 박스예요 */
-        .box { 
-            background: var(--card-bg); 
-            padding: 15px; 
-            border-radius: 18px; 
-            margin-bottom: 12px; 
-            border: 1px solid rgba(0,0,0,0.07);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        /* [수정됨] 메인 버튼: 한 줄 표시, 폰트 확대 */
+        .main-menu-btn {
+            display: flex; align-items: center; justify-content: center; /* 가운데 정렬 */
+            width: 100%; padding: 35px 15px; margin-bottom: 20px;
+            border-radius: 20px; border: none; 
+            font-size: 22px; /* 모바일에서 한줄로 나올 수 있는 최대 크기 고려 */
+            font-weight: 900;
+            cursor: pointer; transition: 0.2s; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            white-space: nowrap; /* 줄바꿈 방지 */
+            word-break: keep-all;
         }
+        .main-menu-btn span {
+            display: inline-block;
+        }
+        .main-menu-btn:active { transform: scale(0.97); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-game { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; }
+        .btn-rank { background: linear-gradient(135deg, #42a5f5, #1976d2); color: white; }
         
+        .box { 
+            background: var(--card-bg); padding: 15px; border-radius: 18px; margin-bottom: 12px; 
+            border: 1px solid rgba(0,0,0,0.07); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
         .flex-row { display: flex; gap: 6px; margin-bottom: 10px; align-items: flex-start; }
         .input-group { flex: 1; display: flex; flex-direction: column; }
         .filter-label { font-size: 10px; font-weight: bold; color: #888; margin-bottom: 3px; padding-left: 2px; }
         
-        /* [버튼과 입력창] 누르고 글씨 쓰는 칸들의 디자인이에요 */
         select, input, button { font-size: 14px !important; }
         select, input { padding: 8px; border-radius: 10px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; height: 40px; }
         button { border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
@@ -112,57 +166,58 @@
         .btn-orange { background-color: #ff9800; color: white; margin-top: 8px; }
         .btn-red { background-color: var(--danger); color: white; margin-top: 15px; padding: 6px; opacity: 0.7; font-size: 11px !important; }
         
+        /* [수정됨] 홈 버튼: 산뜻한 오렌지색 */
+        .btn-home { 
+            background: var(--home-btn-bg); 
+            color: white; 
+            margin: 0 auto 15px auto; 
+            display: block;
+            width: 80%; 
+            padding: 14px 20px; font-size: 16px !important; font-weight: bold;
+            box-shadow: 0 6px 15px var(--home-btn-shadow); 
+            border-radius: 30px; /* 더 둥글게 */
+        }
+        
+        #saveBtn {
+            box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3);
+            margin-top: 10px;
+            padding: 15px;
+            font-size: 16px !important;
+        }
+
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #eee; padding: 4px; border-radius: 12px; margin-bottom: 8px; }
         .switch-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .switch-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* [참여자 목록] 사람 이름을 고르는 바둑판 모양이에요 */
         .player-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 300px; overflow-y: auto; padding: 5px; }
         .player-item { background: #f9f9f9; padding: 8px 12px; border-radius: 10px; border: 1px solid #eee; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .player-item input { width: 16px; height: 16px; margin: 0; }
         
-        /* [전광판] 현재 점수를 보여주는 검은색 판이에요 */
         .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #2c3e50; color: white; padding: 15px; border-radius: 18px; margin: 12px 0; }
         .score-num { font-size: 2.5em; font-weight: 900; }
         
-        /* [대진 카드] 누가 누구랑 붙는지 보여주는 카드예요 */
-        .match-card { 
-            background: #fff; 
-            border-radius: 14px; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border: 1px solid rgba(0,0,0,0.07);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-        }
-
+        .match-card { background: #fff; border-radius: 14px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.07); box-shadow: 0 6px 15px rgba(0,0,0,0.5); }
         .match-btn-group { display: flex; gap: 8px; margin-top: 10px; }
         .match-btn-group button { padding: 8px; background: #f4f4f4; color: #555; }
         .selected-a { background: var(--secondary) !important; color: white !important; }
         .selected-b { background: var(--danger) !important; color: white !important; }
         
-        /* [라벨] 단식인지 복식인지 알려주는 꼬리표예요 */
-        .type-badge { padding: 2px 6px; border-radius: 6px; font-weight: bold; font-size: 10px; color: white; margin-left: 6px; }
+        .type-badge { padding: 2px 6px; border-radius: 6px; font-weight: bold; font-size: 12px; color: white; margin-left: 6px; }
         .type-singles { background-color: #9c27b0; }
         .type-doubles { background-color: #009688; }
-        
-        /* [승리 확률] 누가 이길 것 같은지 숫자로 보여줘요 */
         .win-prob { font-size: 13px; color: #aaa; font-weight: normal; margin: 0 4px; }
         .win-prob.high { color: #ff5722; font-weight: 800; }
         
-        /* [로딩 창] 데이터를 가져올 때 빙글빙글 도는 화면이에요 */
         #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 10000; justify-content: center; align-items: center; font-weight: bold; }
         
-        /* [모달 팝업] 화면 위에 붕 떠서 나타나는 작은 창이에요 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 11000; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 420px; position: relative; max-height: 80vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
         .modal-close-x { font-size: 28px; color: #aaa; cursor: pointer; line-height: 1; }
         
-        /* [축하 가루] 우승했을 때 하늘에서 내리는 종이가루예요 */
         .confetti { position: fixed; width: 8px; height: 8px; z-index: 12000; top: -10px; animation: fall linear forwards; }
         @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
         
-        /* [표] 통계치를 보여주는 표의 디자인이에요 */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th { background: var(--primary); color: white; padding: 10px 4px; font-size: 13px; }
         td { padding: 12px 4px; text-align: center; border-bottom: 1px solid #eee; }
@@ -190,119 +245,159 @@
 <body>
 
 <div id="intro-layer">
-    <img src="intro.png" alt="PingPong DB">
+    <video autoplay muted playsinline>
+        <source src="intro.mp4" type="video/mp4">
+        영상을 재생할 수 없습니다.
+    </video>
     <div class="intro-text">클라우드 데이터 동기화 중...</div>
 </div>
 
 <div id="loading">데이터 동기화 중...</div>
 
 <div class="container">
-    <div class="header-container">
-        <div class="header-title">🏓 PING-PONG DB PRO <span class="version-tag">V1.23</span></div>
-        <div class="header-subtitle" style="margin-top: 5px;">Since '26.2/9</div>
-        <div class="header-subtitle">Designed by KS</div>
-    </div>
     
-    <div class="box">
-        <div class="flex-row">
-            <div class="input-group" style="flex: 1.5;">
-                <label class="filter-label">날짜</label>
-                <input type="date" id="matchDate" onchange="checkDateData()">
-            </div>
-            <div class="input-group">
-                <label class="filter-label">시간</label>
-                <select id="matchTime" onchange="checkDateData()">
-                    <option value="lunch">점심</option>
-                    <option value="dinner">저녁</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label class="filter-label">회차</label>
-                <select id="matchSession" onchange="checkDateData(); render();">
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
-                    <option value="10">10</option>
-                </select>
+    <div id="mainMenuLayer">
+        <div class="main-title-area">
+            <div>
+                <span class="main-title-icon">🏓</span>
+                <div class="main-title-text">
+                    PING-PONG<br>DB PRO
+                </div>
+                <span class="version-tag-inline">V1.30</span>
             </div>
         </div>
-        <div id="dateStatus" style="text-align:center; font-size: 11px; margin-bottom:10px; font-weight: bold;"></div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <button class="main-menu-btn btn-game" onclick="showScreen('game')" style="font-size: 30px;">
+                <span style="font-size: 25px !important; display: block;">🚀 대진표 생성 및 결과 기록</span>
+            </button>
+            <button class="main-menu-btn btn-rank" onclick="showScreen('rank')" style="font-size: 30px;">
+                <span style="font-size: 25px !important; display: block;">📊 랭킹 확인 (승률 및 게임비)</span>
+            </button>
+        </div>
+
+        <div class="main-footer-info">
+            <div>Since '26.2/9</div>
+            <div style="font-weight: bold; margin-top: 4px;">Designed by KS</div>
+        </div>
+    </div>
+
+    <div id="gameLayer" style="display:none;">
+        <div class="header-container">
+            <div class="header-title">🏓 대진표 생성 및 결과 기록</div>
+        </div>
+        <button class="btn-home" onclick="showScreen('main')">🏠 메인 메뉴로 돌아가기</button>
         
-        <div style="margin-top: 5px;">
-            <button class="btn-blue" onclick="openModal('playerModal')">👥 참여자 선택 (<span id="selectedCountText">0</span>명)</button>
-            <div class="flex-row" style="margin-top:8px;">
+        <div class="box">
+            <h3 style="margin:0 0 10px 0; font-size:16px; color:var(--primary);">⚙️ 경기 설정</h3>
+            <div class="flex-row">
+                <div class="input-group" style="flex: 1.5;">
+                    <label class="filter-label">날짜</label>
+                    <input type="date" id="matchDate" onchange="checkDateData()">
+                </div>
                 <div class="input-group">
-                    <label class="filter-label">방식</label>
-                    <select id="gameMode">
-                        <option value="mixed">혼합(복/단)</option>
-                        <option value="doubles">전부 복식</option>
-                        <option value="singles">전부 단식</option>
+                    <label class="filter-label">시간</label>
+                    <select id="matchTime" onchange="checkDateData()">
+                        <option value="lunch">점심</option>
+                        <option value="dinner">저녁</option>
                     </select>
                 </div>
                 <div class="input-group">
-                    <label class="filter-label">승리 기준</label>
-                    <select id="winCondition">
-                        <option value="1">단판!</option>
-                        <option value="3">3판 2선승</option>
-                        <option value="5">5판 3선승</option>
-                        <option value="7">7판 4선승</option>
-                        <option value="9">9판 5선승</option>
-                        <option value="11">11판 6선승</option>
+                    <label class="filter-label">회차</label>
+                    <select id="matchSession" onchange="checkDateData(); render();">
+                        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                        <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                        <option value="10">10</option>
                     </select>
                 </div>
             </div>
-            <div class="switch-container">
-                <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙(실력순)</div>
-                <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨(랜덤)</div>
+            <div id="dateStatus" style="text-align:center; font-size: 11px; margin-bottom:10px; font-weight: bold;"></div>
+            
+            <div style="margin-top: 5px;">
+                <button class="btn-blue" onclick="openModal('playerModal')">👥 참여자 선택 (<span id="selectedCountText">0</span>명)</button>
+                <div class="flex-row" style="margin-top:8px;">
+                    <div class="input-group">
+                        <label class="filter-label">방식</label>
+                        <select id="gameMode">
+                            <option value="mixed">혼합(복/단)</option>
+                            <option value="doubles">전부 복식</option>
+                            <option value="singles">전부 단식</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="filter-label">승리 기준</label>
+                        <select id="winCondition">
+                            <option value="1">단판!</option>
+                            <option value="3">3판 2선승</option>
+                            <option value="5">5판 3선승</option>
+                            <option value="7">7판 4선승</option>
+                            <option value="9">9판 5선승</option>
+                            <option value="11">11판 6선승</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="switch-container">
+                    <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙(실력순)</div>
+                    <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨(랜덤)</div>
+                </div>
+                <button class="btn-orange" onclick="handleSmartStart()">🚀 새 대진표 생성</button>
             </div>
-            <button class="btn-orange" onclick="handleSmartStart()">🚀 새 대진표 생성</button>
+        </div>
+
+        <div id="matchArea" style="display:none;">
+            <div class="scoreboard">
+                <div style="text-align:center;">
+                    <div id="scoreA" class="score-num" style="color:#64b5f6;">0</div>
+                    <div style="font-size:11px;">TEAM A</div>
+                </div>
+                <div style="font-size:1.5em; opacity:0.3;">VS</div>
+                <div style="text-align:center;">
+                    <div id="scoreB" class="score-num" style="color:#f28b82;">0</div>
+                    <div style="font-size:11px;">TEAM B</div>
+                </div>
+            </div>
+            <div id="teamPreviewArea"></div>
+            <div id="lineupArea"></div>
+            <button id="saveBtn" class="btn-blue" style="background:var(--primary); margin-top:5px;" onclick="handleManualSave()">🏁 경기 결과 최종 저장</button>
         </div>
     </div>
 
-    <div id="matchArea" style="display:none;">
-        <div class="scoreboard">
-            <div style="text-align:center;">
-                <div id="scoreA" class="score-num" style="color:#64b5f6;">0</div>
-                <div style="font-size:11px;">TEAM A</div>
-            </div>
-            <div style="font-size:1.5em; opacity:0.3;">VS</div>
-            <div style="text-align:center;">
-                <div id="scoreB" class="score-num" style="color:#f28b82;">0</div>
-                <div style="font-size:11px;">TEAM B</div>
-            </div>
+    <div id="rankLayer" style="display:none;">
+        <div class="header-container">
+            <div class="header-title">📊 파워 랭킹 및 게임비 랭킹</div>
         </div>
-        <div id="teamPreviewArea"></div>
-        <div id="lineupArea"></div>
-        <button id="saveBtn" class="btn-blue" style="background:var(--primary); margin-top:5px;" onclick="handleManualSave()">🏁 경기 결과 최종 저장</button>
-    </div>
-
-    <div class="box">
-        <h3 style="text-align:center; margin-top:0; font-size:15px; color:#444;">📊 승률 및 게임비 통계</h3>
-        <div class="period-btns">
-            <button class="btn-p active" onclick="setQuickPeriod(0, this)">전체</button>
-            <button class="btn-p" onclick="setQuickPeriod(1, this)">1개월</button>
-            <button class="btn-p" onclick="setQuickPeriod(2, this)">2개월</button>
-            <button class="btn-p" onclick="setQuickPeriod(3, this)">3개월</button>
-        </div>
-        <div class="flex-row">
-            <div class="input-group">
-                <label class="filter-label">시작일</label>
-                <input type="date" id="statsStart" onchange="updateUI()">
-            </div>
-            <div class="input-group">
-                <label class="filter-label">종료일</label>
-                <input type="date" id="statsEnd" onchange="updateUI()">
-            </div>
-        </div>
+        <button class="btn-home" onclick="showScreen('main')">🏠 메인 메뉴로 돌아가기</button>
         
-        <h4 style="font-size:13px; border-left:3px solid var(--primary); padding-left:8px; margin:15px 0 5px 0;">🏆 승률 랭킹</h4>
-        <div id="rankingTableArea"></div>
-        
-        <h4 style="font-size:13px; border-left:3px solid var(--danger); padding-left:8px; margin:25px 0 5px 0;">💸 게임비 기부 랭킹</h4>
-        <div id="moneyRankingTableArea"></div>
+        <div class="box">
+            <h3 style="text-align:center; margin-top:0; font-size:15px; color:#444;">조회 기간 설정</h3>
+            <div class="period-btns">
+                <button class="btn-p active" onclick="setQuickPeriod(0, this)">전체</button>
+                <button class="btn-p" onclick="setQuickPeriod(1, this)">1개월</button>
+                <button class="btn-p" onclick="setQuickPeriod(2, this)">2개월</button>
+                <button class="btn-p" onclick="setQuickPeriod(3, this)">3개월</button>
+            </div>
+            <div class="flex-row">
+                <div class="input-group">
+                    <label class="filter-label">시작일</label>
+                    <input type="date" id="statsStart" onchange="updateUI()">
+                </div>
+                <div class="input-group">
+                    <label class="filter-label">종료일</label>
+                    <input type="date" id="statsEnd" onchange="updateUI()">
+                </div>
+            </div>
+            
+            <h4 style="font-size:13px; border-left:3px solid var(--primary); padding-left:8px; margin:15px 0 5px 0;">🏆 파워 랭킹</h4>
+            <div id="rankingTableArea"></div>
+            
+            <h4 style="font-size:13px; border-left:3px solid var(--danger); padding-left:8px; margin:25px 0 5px 0;">💸 게임비 기부 랭킹</h4>
+            <div id="moneyRankingTableArea"></div>
 
-        <button class="btn-red" onclick="resetDatabase()">⚠️ 데이터 초기화</button>
+            <button class="btn-red" onclick="resetDatabase()">⚠️ 데이터 초기화</button>
+        </div>
     </div>
+
 </div>
 
 <div id="playerModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'playerModal')">
@@ -338,13 +433,12 @@
 </div>
 
 <script>
-    /* [데이터 저장소] 구글 스프레드시트와 통신하는 주소예요 */
+     /* [데이터 저장소] 구글 스프레드시트와 통신하는 주소예요 */
     const API_URL = "https://script.google.com/macros/s/AKfycbzTImCgYtXbc4yN3VSNahYj6MKi9c36GZkF7rt8ofkE8asQWd95deMk05D8rHJMc06v/exec"; 
 
     /*  테스트 DB 주소 : https://script.google.com/macros/s/AKfycbztrs5aqu_1RW_w-H0LzsszCivwGhh-fkHFtouGKlYYohwhPWtCbeORWcw1mzsTFoKJ/exec  */
     /*  배포 DB 주소 : https://script.google.com/macros/s/AKfycbzTImCgYtXbc4yN3VSNahYj6MKi9c36GZkF7rt8ofkE8asQWd95deMk05D8rHJMc06v/exec  */
 
-    /* [시간 체크] 정해진 시간에만 사용할 수 있게 검사하는 기능이에요 */
     function checkAccess() {
         const now = new Date();
         const day = now.getDay(); 
@@ -371,7 +465,6 @@
     let currentBalanceMode = 'tight';
     let isAlreadySaved = false;
 
-    /* 앱이 켜지자마자 실행되는 부분이에요 */
     window.onload = function() {
         const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
         document.getElementById('matchDate').value = today;
@@ -380,13 +473,29 @@
         syncWithCloud();
     };
 
+    /* [화면 전환 함수] */
+    function showScreen(screenName) {
+        document.getElementById('mainMenuLayer').style.display = 'none';
+        document.getElementById('gameLayer').style.display = 'none';
+        document.getElementById('rankLayer').style.display = 'none';
+
+        if(screenName === 'main') {
+            document.getElementById('mainMenuLayer').style.display = 'flex'; // 메인은 Flex 사용
+        } else if(screenName === 'game') {
+            document.getElementById('gameLayer').style.display = 'block';
+            checkDateData(); 
+        } else if(screenName === 'rank') {
+            document.getElementById('rankLayer').style.display = 'block';
+            updateUI(); 
+        }
+    }
+
     function setBalanceMode(mode) {
         currentBalanceMode = mode;
         document.getElementById('balance_tight').classList.toggle('active', mode === 'tight');
         document.getElementById('balance_random').classList.toggle('active', mode === 'random');
     }
 
-    /* 선수 목록을 화면에 그려주는 함수예요 */
     function initPlayerList() {
         const grid = document.getElementById('playerGrid'); 
         grid.innerHTML = "";
@@ -410,7 +519,6 @@
     function closeClickOut(e, id) { if(e.target.id === id) closeModal(id); }
     function getCurrentKey() { return `${document.getElementById('matchDate').value}_${document.getElementById('matchTime').value}_s${document.getElementById('matchSession').value}`; }
 
-    /* 인터넷 너머 클라우드에서 데이터를 가져와요 */
     async function syncWithCloud() {
         try { 
             const response = await fetch(`${API_URL}?t=${Date.now()}`);
@@ -425,7 +533,6 @@
         } catch(e) { console.error(e); }
     }
 
-    /* 선택한 날짜에 이미 경기가 있었는지 확인해요 */
     function checkDateData() {
         const key = getCurrentKey();
         const matchData = db.matchHistory[key];
@@ -443,7 +550,6 @@
         }
     }
 
-    /* 승률 순위를 계산해서 화면에 보여주는 아주 중요한 기능이에요 */
     function updateUI() {
         if(!db.matchHistory) return;
         let stats = {}; 
@@ -493,7 +599,6 @@
         document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
     }
 
-    /* 특정 선수를 눌렀을 때 상대방이랑 어떻게 싸웠는지 보여줘요 */
     function showVersusStats(name) {
         if(!db.matchHistory) return;
         document.getElementById('recordModalTitle').innerText = `🔥 ${name} vs 상대 전적`;
@@ -541,7 +646,6 @@
         updateUI();
     }
 
-    /* [지능형 생성] 대진표를 짤 때 똑똑하게 고민해서 만드는 함수예요 */
     function handleSmartStart() {
         if (!checkAccess()) return; 
         const d = document.getElementById('matchDate').value;
@@ -577,7 +681,6 @@
         }
     }
 
-    /* [대진 알고리즘] 박빙의 승부를 위해 팀을 나누는 수학적 로직이에요 */
     function startMatching() {
         const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
         if (selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
@@ -663,14 +766,9 @@
         }
 
         document.getElementById('matchArea').style.display = 'block';
-        document.getElementById('teamPreviewArea').innerHTML = `
-            <span class="team-label-a">TEAM A</span><br>${aPool.join(', ')}<br>
-            <span class="vs-divider">— VS —</span>
-            <span class="team-label-b">TEAM B</span><br>${bPool.join(', ')}`;
         render();
     }
 
-    /* 점수를 매겨서 최선의 대진을 고르는 점수판이에요 */
     function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates) {
         let penalty = 0;
         const currentAll = [...pA, ...pB];
@@ -699,7 +797,6 @@
         return penalty + Math.random(); 
     }
 
-    /* 화면에 대진표와 기부 내역을 그려주는 함수예요 */
     function render() {
         if(!currentMatchData || !currentMatchData.lineups) return;
         const area = document.getElementById('lineupArea'); 
@@ -710,14 +807,28 @@
         document.getElementById('scoreA').innerText = wA; 
         document.getElementById('scoreB').innerText = wB;
         
+        // [팀 정보 표시 기능 추가] 
+        if (currentMatchData.teams) {
+            const aTeam = currentMatchData.teams.a ? currentMatchData.teams.a.join(', ') : '';
+            const bTeam = currentMatchData.teams.b ? currentMatchData.teams.b.join(', ') : '';
+            document.getElementById('teamPreviewArea').innerHTML = `
+                <span class="team-label-a">TEAM A</span><br>${aTeam}<br>
+                <span class="vs-divider">— VS —</span>
+                <span class="team-label-b">TEAM B</span><br>${bTeam}`;
+        }
+
         currentMatchData.lineups.forEach(m => {
             const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
             const probA = m.probA || 50;
             const probB = 100 - probA;
+
+            // [추가된 아이콘 로직]
+            const typeIcon = m.type === '단식' ? '🏓' : '🏓🏓';
+
             const card = document.createElement('div'); 
             card.className = 'match-card';
             if(win) card.style.borderLeft = `8px solid ${win==='A'?'var(--secondary)':'var(--danger)'}`;
-            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${m.type}</span></div>
+            card.innerHTML = `<div style="display:flex; align-items:center;"><small style="color:#888;">#${m.id}</small><span class="type-badge ${typeClass}">${typeIcon} ${m.type}</span></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0; font-weight:bold;">
                     <div style="flex:1.2; text-align:left; font-size: 15px;">${m.pA.join(', ')}</div> 
                     <div style="flex:1.5; text-align:center;">
@@ -731,11 +842,12 @@
 
         const date = document.getElementById('matchDate').value;
         const session = document.getElementById('matchSession').value;
-        const time = document.getElementById('matchTime').value; // 현재 선택된 시간(lunch/dinner) 가져오기
+        const time = document.getElementById('matchTime').value;
+
         const currentSessionMoney = db.moneyHistory.filter(m => 
             m.date === date && 
             String(m.session) === String(session) && 
-            m.time === time // 시간 조건 추가
+            m.time === time
         );
 
         if (currentSessionMoney.length > 0) {
@@ -758,7 +870,6 @@
         }
     }
 
-    /* 승패 버튼을 눌렀을 때 실행되는 함수예요 */
     function record(id, w) {
         if (isAlreadySaved) {
             if (!confirm("기존에 저장된 경기 결과를 변경하시겠습니까?")) return;
@@ -789,7 +900,6 @@
         }
     }
 
-    /* 클라우드에 경기 결과를 영구적으로 저장해요 */
     async function saveToCloud(losers = []) {
         if (isAlreadySaved || db.matchHistory[getCurrentKey()]) {
             if (!confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?")) return;
@@ -808,7 +918,6 @@
         finally { document.getElementById('loading').style.display = 'none'; }
     }
 
-    /* 저장이 끝나고 나서 똘똘말이나 게임비 입력을 물어봐요 */
     function handlePostSavePopups(losers) {
         if (!losers || losers.length === 0) return;
         if (losers.length > 1) {
@@ -870,16 +979,17 @@
         const inputs = document.querySelectorAll('.money-input');
         const date = document.getElementById('matchDate').value;
         const session = document.getElementById('matchSession').value; 
+        const time = document.getElementById('matchTime').value; 
+
         let hasData = false;
 
         inputs.forEach(input => {
             const amount = parseInt(input.value);
             if(amount > 0) {
-                const time = document.getElementById('matchTime').value; // 시간 값 가져오기
                 db.moneyHistory.push({
                     date: date,
-                    session: session,
-                    time: time, // 시간 데이터 추가 저장
+                    session: session, 
+                    time: time,
                     name: input.dataset.name,
                     amount: amount
                 });
@@ -890,18 +1000,18 @@
         if(hasData) {
             document.getElementById('loading').style.display = 'flex';
             try {
-                await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'});
+                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
                 alert("기부액이 성공적으로 저장되었습니다.");
             } catch(e) {
                 alert("저장 중 오류가 발생했습니다.");
             } finally {
                 document.getElementById('loading').style.display = 'none';
+                showScreen('main'); 
             }
         }
         updateUI();
     }
 
-    /* 모든 데이터를 싹 지우는 무서운 기능이에요 (비밀번호 필요) */
     async function resetDatabase() {
         const pw = prompt("비밀번호?");
         if (pw === "7640" && confirm("초기화할까요?")) {
@@ -927,7 +1037,6 @@
         } 
     }
 
-    /* 스마트폰에서 앱처럼 깔 수 있게 도와주는 도우미예요 */
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
 </script>
 </body>
