@@ -263,7 +263,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.51</span>
+                <span class="version-tag-inline">V1.60</span>
             </div>
         </div>
 
@@ -341,6 +341,15 @@
                     <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙(실력순)</div>
                     <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨(랜덤)</div>
                 </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0 8px 0; padding:0 4px;">
+                    <span style="font-size:12px; font-weight:bold; color:#666;">🤖 팀 선정 방식</span>
+                    <div class="switch-container" style="margin-bottom:0; width:130px; background:#e0e0e0;">
+                        <div id="team_auto" class="switch-btn active" style="padding:4px;" onclick="setTeamMode('auto')">자동</div>
+                        <div id="team_manual" class="switch-btn" style="padding:4px;" onclick="setTeamMode('manual')">수동</div>
+                    </div>
+                </div>
+
                 <button class="btn-orange" onclick="handleSmartStart()">🚀 새 대진표 생성</button>
             </div>
         </div>
@@ -395,8 +404,11 @@
                 </div>
             </div>
             
-            <h4 style="font-size:13px; border-left:3px solid var(--primary); padding-left:8px; margin:15px 0 5px 0;">🏆 파워 랭킹</h4>
-            <div id="rankingTableArea"></div>
+            <h4 style="font-size:13px; border-left:3px solid #ff9800; padding-left:8px; margin:15px 0 5px 0;">☀️ 점심 파워 랭킹</h4>
+            <div id="rankingTableArea_lunch"></div>
+
+            <h4 style="font-size:13px; border-left:3px solid #3f51b5; padding-left:8px; margin:20px 0 5px 0;">🌙 저녁 파워 랭킹</h4>
+            <div id="rankingTableArea_dinner"></div>
             
             <h4 style="font-size:13px; border-left:3px solid var(--danger); padding-left:8px; margin:25px 0 5px 0;">💸 게임비 기부 랭킹</h4>
             <div id="moneyRankingTableArea"></div>
@@ -417,6 +429,19 @@
         <button class="btn-blue" style="margin-top:15px;" onclick="closeModal('playerModal')">선택 완료</button>
     </div>
 </div>
+
+<div id="manualTeamModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'manualTeamModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-weight: 800; font-size: 16px;">🅰️ A팀 인원 선택</span>
+            <span class="modal-close-x" onclick="closeModal('manualTeamModal')">×</span>
+        </div>
+        <p style="font-size:12px; color:#666; margin-top:0;">선택된 인원은 A팀, 나머지는 자동으로 B팀이 됩니다.</p>
+        <div id="manualTeamGrid" class="player-grid"></div>
+        <button class="btn-blue" style="margin-top:15px; background:var(--primary);" onclick="confirmManualTeam()">선택 완료 및 대진표 생성</button>
+    </div>
+</div>
+
 
 <div id="latecomerModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'latecomerModal')">
     <div class="modal-content">
@@ -482,6 +507,7 @@
     let db = { matchHistory: {}, moneyHistory: [] }; 
     let currentMatchData = null;
     let currentBalanceMode = 'tight';
+    let isManualTeamMode = false; // ★ 수동 팀 선정 모드 상태 변수
     let isAlreadySaved = false;
     let isNextToltol = false; // ★ 똘똘말이 대전 예약 상태 추가
 
@@ -575,13 +601,16 @@
         // 데이터가 없으면 중단
         if(!db.matchHistory) return;
         
-        let stats = {}; 
-        let moneyStats = {}; 
+        // ★ 점심/저녁 랭킹을 따로 담을 변수 생성
+        let lunchStats = {}; 
+        let dinnerStats = {}; 
+        let moneyStats = {};
         
         // [1] 변수 초기화 (총 패배수, 똘똘말이 패배수 모두 0으로 셋팅)
         fixedList.forEach(n => {
-            stats[n] = { win: 0, total: 0 };
-            moneyStats[n] = { money: 0, loses: 0, toltolLoses: 0 }; 
+            lunchStats[n] = { win: 0, total: 0 };
+            dinnerStats[n] = { win: 0, total: 0 };
+            moneyStats[n] = { money: 0, loses: 0 }; 
         });
 
         const start = document.getElementById('statsStart').value;
@@ -601,27 +630,23 @@
             const dStr = key.substring(0, 10);
             if((start && dStr < start) || (end && dStr > end)) return;
             const m = db.matchHistory[key]; if(!m || !m.results) return;
-            
-            // 이 경기가 똘똘말이 매치였는지 확인 (새로 만든 대진표이거나, 돈 낸 기록이 있거나)
-            const isToltolGame = (m.isToltol === true) || toltolSessions.has(key);
+
+            // ★ key 값(ex: 2026-02-09_lunch_s1)에서 'lunch'가 포함되었는지 확인
+            const isLunch = key.includes('_lunch_');
+            const targetStats = isLunch ? lunchStats : dinnerStats;
 
             m.lineups.forEach(l => {
                 const res = m.results[l.id]; if(!res) return;
                 const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
                 
                 win.forEach(p => { 
-                    if(stats[p]) { stats[p].win++; stats[p].total++; } 
+                    if(targetStats[p]) { targetStats[p].win++; targetStats[p].total++; } 
                 });
                 
                 lose.forEach(p => { 
-                    if(stats[p]) stats[p].total++; 
+                    if(targetStats[p]) targetStats[p].total++; 
                     if(moneyStats[p]) {
-                        moneyStats[p].loses++; // 게임 패배수 (무조건 증가)
-                        
-                        // ★ 똘똘말이 매치에서 진 경우에만 '똘똘말이 패배수' 별도 증가!
-                        if(isToltolGame) {
-                            moneyStats[p].toltolLoses++;
-                        }
+                        moneyStats[p].loses++; 
                     }
                 });
             });
@@ -637,19 +662,27 @@
             });
         }
 
-        // [5] 승률 랭킹 출력 (상단)
-        let sorted = Object.entries(stats).filter(x=>x[1].total>0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
-        let html = `<table><tr><th>순위</th><th>이름</th><th>게임</th><th>승</th><th>승률</th></tr>`;
-        sorted.forEach(([n, d], i) => { 
-            html += `<tr>
-                        <td class="rank-num">${i+1}</td>
-                        <td><b class="clickable-name rank-name" onclick="showVersusStats('${n}')">${n}</b></td>
-                        <td>${d.total}</td>
-                        <td>${d.win}</td>
-                        <td><b class="rank-winrate" style="color:var(--primary)">${((d.win/d.total)*100).toFixed(1)}%</b></td>
-                     </tr>`; 
-        });
-        document.getElementById('rankingTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기록 없음</p>";
+        // [5] ★ 점심/저녁 랭킹 테이블 각각 그리는 함수 (timeType 파라미터 추가)
+        function createRankingHtml(statsObj, timeType) {
+            let sorted = Object.entries(statsObj).filter(x=>x[1].total>0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
+            if(sorted.length === 0) return "<p style='text-align:center; font-size:12px; color:#aaa;'>기록 없음</p>";
+            
+            let html = `<table><tr><th style="width:15%;">순위</th><th style="width:25%;">이름</th><th style="width:20%;">게임</th><th style="width:20%;">승</th><th style="width:20%;">승률</th></tr>`;
+            sorted.forEach(([n, d], i) => { 
+                html += `<tr>
+                            <td class="rank-num">${i+1}</td>
+                            <td><b class="clickable-name rank-name" onclick="showVersusStats('${n}', '${timeType}')">${n}</b></td>
+                            <td>${d.total}</td>
+                            <td>${d.win}</td>
+                            <td><b class="rank-winrate" style="color:var(--primary)">${((d.win/d.total)*100).toFixed(1)}%</b></td>
+                         </tr>`; 
+            });
+            return html + "</table>";
+        }
+
+        document.getElementById('rankingTableArea_lunch').innerHTML = createRankingHtml(lunchStats, 'lunch');
+        document.getElementById('rankingTableArea_dinner').innerHTML = createRankingHtml(dinnerStats, 'dinner');
+
 
         // [6] 게임비 기부 랭킹 출력 (하단) - 정렬: 기부액 많은순 > 똘똘말이 패배 많은순 > 일반 패배 많은순
         let mSorted = Object.entries(moneyStats).filter(x => x[1].money > 0 || x[1].loses > 0).sort((a,b) => {
@@ -679,12 +712,13 @@
         document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
     }
 
-    function showVersusStats(name) {
+    // ★ 파라미터에 timeType 추가
+    function showVersusStats(name, timeType) {
         if(!db.matchHistory) return;
         
         let vsStats = {}; 
-        let myTotal = 0; // ★ 추가: 내 진짜 전체 게임 수
-        let myWins = 0;  // ★ 추가: 내 진짜 전체 승리 수
+        let myTotal = 0; 
+        let myWins = 0;  
         
         const start = document.getElementById('statsStart').value;
         const end = document.getElementById('statsEnd').value;
@@ -692,6 +726,10 @@
         Object.keys(db.matchHistory).forEach(key => {
             const dStr = key.substring(0, 10);
             if((start && dStr < start) || (end && dStr > end)) return;
+            
+            // ★ timeType이 있을 경우, 해당 시간대(lunch 또는 dinner)의 경기만 필터링
+            if (timeType && !key.includes(`_${timeType}_`)) return;
+
             const m = db.matchHistory[key]; if(!m || !m.results) return;
             
             m.lineups.forEach(l => {
@@ -747,7 +785,10 @@
         // ★ 메인 화면과 완벽히 일치하는 총 승률 계산
         let overallWinRate = myTotal > 0 ? ((myWins / myTotal) * 100).toFixed(1) : 0;
         
-        document.getElementById('recordModalTitle').innerHTML = `🔥 ${name} vs 상대 전적 <span style="font-size:14px; color:var(--primary); margin-left:8px; font-weight:900;">(총 승률: ${overallWinRate}%)</span>`;
+        // ★ 팝업 타이틀에 점심/저녁 구분을 표시
+        let timeLabel = timeType === 'lunch' ? '☀️ 점심' : (timeType === 'dinner' ? '🌙 저녁' : '전체');
+        
+        document.getElementById('recordModalTitle').innerHTML = `🔥 ${name} vs 상대 전적 [${timeLabel}] <span style="font-size:14px; color:var(--primary); margin-left:8px; font-weight:900;">(총 승률: ${overallWinRate}%)</span>`;
 
         document.getElementById('recordTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; padding:20px;'>기록 없음</p>";
         openModal('recordModal');
@@ -797,10 +838,35 @@
         }
     }
 
+    function setTeamMode(mode) {
+        isManualTeamMode = (mode === 'manual');
+        document.getElementById('team_auto').classList.toggle('active', mode === 'auto');
+        document.getElementById('team_manual').classList.toggle('active', mode === 'manual');
+    }
+
     function startMatching() {
         const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
         if (selected.length < 2) { alert("2명 이상 선택하세요!"); return; }
 
+        if (isManualTeamMode) {
+            // 수동 모드: 참여자 중 A팀을 고르는 팝업 띄우기
+            const grid = document.getElementById('manualTeamGrid');
+            grid.innerHTML = "";
+            selected.forEach(name => {
+                const div = document.createElement('div');
+                div.className = "player-item";
+                div.innerHTML = `<input type="checkbox" name="manual_player" value="${name}"> <span>${name}</span>`;
+                div.onclick = function(e) { 
+                    const cb = this.querySelector('input'); 
+                    if(e.target !== cb) cb.checked = !cb.checked; 
+                };
+                grid.appendChild(div);
+            });
+            openModal('manualTeamModal');
+            return; // 팝업 응답 대기
+        }
+
+        // 자동 모드: 승률 계산 후 밸런스에 맞게 팀 자동 분배
         let stats = {}; 
         fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
         Object.values(db.matchHistory).forEach(m => {
@@ -824,6 +890,38 @@
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
         }
 
+        // 팀 분배 후 대진표 생성 진행
+        generateMatchups(aPool, bPool, selected, winRates);
+    }
+
+    // 수동 팝업에서 완료 버튼을 눌렀을 때 실행
+    function confirmManualTeam() {
+        const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
+        const aPool = Array.from(document.querySelectorAll('input[name="manual_player"]:checked')).map(c => c.value);
+        const bPool = selected.filter(p => !aPool.includes(p));
+        
+        closeModal('manualTeamModal');
+
+        // 매칭 페널티 계산을 위한 승률 통계
+        let stats = {}; 
+        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+        Object.values(db.matchHistory).forEach(m => {
+            if(!m.results) return;
+            m.lineups.forEach(l => {
+                const res = m.results[l.id]; if(!res) return;
+                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+                lose.forEach(p => { if(stats[p]) stats[p].total++; });
+            });
+        });
+        const winRates = {};
+        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+
+        generateMatchups(aPool, bPool, selected, winRates);
+    }
+
+    // 실제 대진표를 그리는 로직 (기존 startMatching의 뒷부분)
+    function generateMatchups(aPool, bPool, selected, winRates) {
         const wc = parseInt(document.getElementById('winCondition').value) || 1;
         const mode = document.getElementById('gameMode').value;
         
@@ -834,15 +932,15 @@
         let consecutiveCount = {};   
         selected.forEach(p => consecutiveCount[p] = 0);
         
-        // ★ 대진표 데이터에 똘똘말이 플래그 추가
         currentMatchData = { 
             teams: { a: aPool, b: bPool }, 
             lineups: [], 
             results: {}, 
             config: { winCon: wc },
-            isToltol: isNextToltol
+            isToltol: isNextToltol 
         };
-        isNextToltol = false; // ★ 다음 대진표를 위해 플래그 초기화
+
+        isNextToltol = false;
 
         for (let i = 1; i <= wc; i++) {
             let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
@@ -882,8 +980,8 @@
                 else consecutiveCount[p] = 0;
             });
 
-            const avgA = bestMatch.pA.reduce((s, p) => s + winRates[p], 0) / bestMatch.pA.length;
-            const avgB = bestMatch.pB.reduce((s, p) => s + winRates[p], 0) / bestMatch.pB.length;
+            const avgA = bestMatch.pA.reduce((s, p) => s + winRates[p], 0) / (bestMatch.pA.length || 1);
+            const avgB = bestMatch.pB.reduce((s, p) => s + winRates[p], 0) / (bestMatch.pB.length || 1);
             const probA = Math.round(avgA / (avgA + avgB) * 100) || 50;
 
             currentMatchData.lineups.push({ id: i, pA: bestMatch.pA, pB: bestMatch.pB, type: bestMatch.type, probA: probA });
