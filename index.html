@@ -263,7 +263,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.60</span>
+                <span class="version-tag-inline">V1.70</span>
             </div>
         </div>
 
@@ -338,8 +338,9 @@
                     </div>
                 </div>
                 <div class="switch-container">
-                    <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙(실력순)</div>
-                    <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨(랜덤)</div>
+                    <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙</div>
+                    <div id="balance_balance" class="switch-btn" onclick="setBalanceMode('balance')">⚖️🎲 밸런스</div> 
+                    <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨</div>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0 8px 0; padding:0 4px;">
@@ -347,6 +348,14 @@
                     <div class="switch-container" style="margin-bottom:0; width:130px; background:#e0e0e0;">
                         <div id="team_auto" class="switch-btn active" style="padding:4px;" onclick="setTeamMode('auto')">자동</div>
                         <div id="team_manual" class="switch-btn" style="padding:4px;" onclick="setTeamMode('manual')">수동</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:0 0 15px 0; padding:0 4px;">
+                    <span style="font-size:12px; font-weight:bold; color:#666;">🎲 대진 생성 방식</span>
+                    <div class="switch-container" style="margin-bottom:0; width:130px; background:#e0e0e0;">
+                        <div id="match_auto" class="switch-btn active" style="padding:4px;" onclick="setMatchMode('auto')">자동</div>
+                        <div id="match_manual" class="switch-btn" style="padding:4px;" onclick="setMatchMode('manual')">수동</div>
                     </div>
                 </div>
 
@@ -375,6 +384,9 @@
             </div>
             <div id="teamPreviewArea"></div>
             <div id="lineupArea"></div>
+
+            <button id="nextGameBtn" class="btn-orange" style="display:none; margin-bottom:10px; background:#795548;" onclick="openManualMatchModal()">➕ 다음 게임 생성 (수동)</button>
+
             <button id="saveBtn" class="btn-blue" style="background:var(--primary); margin-top:5px;" onclick="handleManualSave()">🏁 경기 결과 최종 저장</button>
         </div>
     </div>
@@ -439,6 +451,36 @@
         <p style="font-size:12px; color:#666; margin-top:0;">선택된 인원은 A팀, 나머지는 자동으로 B팀이 됩니다.</p>
         <div id="manualTeamGrid" class="player-grid"></div>
         <button class="btn-blue" style="margin-top:15px; background:var(--primary);" onclick="confirmManualTeam()">선택 완료 및 대진표 생성</button>
+    </div>
+</div>
+
+<div id="manualMatchModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'manualMatchModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-weight: 800; font-size: 16px;">⚔️ 매치업 수동 설정</span>
+            <span class="modal-close-x" onclick="closeModal('manualMatchModal')">×</span>
+        </div>
+        
+        <div class="input-group" style="margin-bottom:15px;">
+            <label class="filter-label">경기 방식</label>
+            <select id="manualMatchType">
+                <option value="단식">단식 (1 vs 1)</option>
+                <option value="복식">복식 (2 vs 2)</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;">
+                <h4 style="margin:0 0 5px 0; color:var(--secondary); font-size:13px;">TEAM A</h4>
+                <div id="manualMatchGridA" class="player-grid" style="display:block; max-height:150px;"></div>
+            </div>
+            <div style="flex:1;">
+                <h4 style="margin:0 0 5px 0; color:var(--danger); font-size:13px;">TEAM B</h4>
+                <div id="manualMatchGridB" class="player-grid" style="display:block; max-height:150px;"></div>
+            </div>
+        </div>
+
+        <button class="btn-blue" style="margin-top:15px;" onclick="confirmManualMatch()">경기 추가</button>
     </div>
 </div>
 
@@ -508,6 +550,7 @@
     let currentMatchData = null;
     let currentBalanceMode = 'tight';
     let isManualTeamMode = false; // ★ 수동 팀 선정 모드 상태 변수
+    let isManualMatchMode = false; // ★ 대진 생성 방식(자동/수동) 변수
     let isAlreadySaved = false;
     let isNextToltol = false; // ★ 똘똘말이 대전 예약 상태 추가
 
@@ -540,6 +583,7 @@
     function setBalanceMode(mode) {
         currentBalanceMode = mode;
         document.getElementById('balance_tight').classList.toggle('active', mode === 'tight');
+        document.getElementById('balance_balance').classList.toggle('active', mode === 'balance'); // 추가됨
         document.getElementById('balance_random').classList.toggle('active', mode === 'random');
     }
 
@@ -882,10 +926,26 @@
         fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
 
         let aPool = [], bPool = [];
+        
         if (currentBalanceMode === 'tight') {
+            // [박빙] 승률 높은 순서대로 정렬 (완전 실력순)
             const sorted = [...selected].sort((p1, p2) => winRates[p2] - winRates[p1]);
+            // 스네이크 방식으로 팀 배분 (1등->A, 2등->B, 3등->B, 4등->A ...)
             sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
+        
+        } else if (currentBalanceMode === 'balance') {
+            // [밸런스] 승률에 '랜덤 노이즈'를 섞어서 정렬
+            // 노이즈 범위 0.4는 승률 40% 정도의 변동폭을 의미 (적당한 섞임)
+            const sorted = [...selected].sort((p1, p2) => {
+                const score1 = winRates[p1] + (Math.random() * 0.4); 
+                const score2 = winRates[p2] + (Math.random() * 0.4);
+                return score2 - score1;
+            });
+            // 섞인 순서대로 스네이크 방식 배분 (밸런스 유지)
+            sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
+            
         } else {
+            // [운빨] 완전 무작위 셔플
             const shuffled = [...selected].sort(() => Math.random() - 0.5);
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
         }
@@ -920,18 +980,18 @@
         generateMatchups(aPool, bPool, selected, winRates);
     }
 
-    // 실제 대진표를 그리는 로직 (기존 startMatching의 뒷부분)
+// ★ 대진 생성 방식 설정 함수 추가
+    function setMatchMode(mode) {
+        isManualMatchMode = (mode === 'manual');
+        document.getElementById('match_auto').classList.toggle('active', mode === 'auto');
+        document.getElementById('match_manual').classList.toggle('active', mode === 'manual');
+    }
+
+    // ★ 실제 대진표를 그리는 로직 (수동/자동 분기 처리 포함)
     function generateMatchups(aPool, bPool, selected, winRates) {
         const wc = parseInt(document.getElementById('winCondition').value) || 1;
-        const mode = document.getElementById('gameMode').value;
         
-        let oppPairHistory = [];     
-        let partnerPairHistory = []; 
-        let singlesPlayCount = {};   
-        selected.forEach(p => singlesPlayCount[p] = 0);
-        let consecutiveCount = {};   
-        selected.forEach(p => consecutiveCount[p] = 0);
-        
+        // 기본 데이터 초기화
         currentMatchData = { 
             teams: { a: aPool, b: bPool }, 
             lineups: [], 
@@ -939,8 +999,25 @@
             config: { winCon: wc },
             isToltol: isNextToltol 
         };
-
         isNextToltol = false;
+
+        // [수동 대진 모드]일 경우: 루프를 돌지 않고 바로 1경기 설정 팝업 오픈
+        if (isManualMatchMode) {
+            document.getElementById('matchArea').style.display = 'block';
+            document.getElementById('nextGameBtn').style.display = 'block'; // '다음 게임 생성' 버튼 보이기
+            render();
+            // 화면이 그려진 후 살짝 뒤에 팝업 띄우기
+            setTimeout(() => { openManualMatchModal(); }, 300); 
+            return;
+        }
+
+        // [자동 대진 모드]일 경우: 기존 로직대로 한꺼번에 생성
+        document.getElementById('nextGameBtn').style.display = 'none'; // 버튼 숨기기
+        
+        const mode = document.getElementById('gameMode').value;
+        let oppPairHistory = []; let partnerPairHistory = []; 
+        let singlesPlayCount = {}; selected.forEach(p => singlesPlayCount[p] = 0);
+        let consecutiveCount = {}; selected.forEach(p => consecutiveCount[p] = 0);
 
         for (let i = 1; i <= wc; i++) {
             let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
@@ -1106,6 +1183,11 @@
 
         currentMatchData.results[id] = (currentMatchData.results[id] === w) ? null : w;
         render();
+
+        // ★ [수동 대진 모드]일 때는 자동 승리 판정(폭죽/종료 알림)을 실행하지 않고 여기서 중단!
+        if (isManualMatchMode) return;
+
+
         let a = 0, b = 0, target = Math.ceil(currentMatchData.config.winCon / 2);
         Object.values(currentMatchData.results).forEach(v => (v === 'A' ? a++ : (v === 'B' ? b++ : 0)));
         if (a >= target || b >= target) { 
@@ -1444,7 +1526,73 @@
         alert("추가 인원이 반영되어 남은 대진이 재구성되었습니다.");
     }
 
+// =========================================================
+    // ★ 수동 대진 추가 관련 함수들 (여기에 붙여넣으세요)
     // =========================================================
+    function openManualMatchModal() {
+        if (!currentMatchData || !currentMatchData.teams) return;
+        
+        // A팀 선수 목록 그리기 (체크박스)
+        const gridA = document.getElementById('manualMatchGridA');
+        gridA.innerHTML = "";
+        currentMatchData.teams.a.forEach(name => {
+            gridA.innerHTML += `<div class="player-item" onclick="toggleCheck(this)"><input type="checkbox" name="manual_pA" value="${name}"> <span>${name}</span></div>`;
+        });
+
+        // B팀 선수 목록 그리기 (체크박스)
+        const gridB = document.getElementById('manualMatchGridB');
+        gridB.innerHTML = "";
+        currentMatchData.teams.b.forEach(name => {
+            gridB.innerHTML += `<div class="player-item" onclick="toggleCheck(this)"><input type="checkbox" name="manual_pB" value="${name}"> <span>${name}</span></div>`;
+        });
+
+        openModal('manualMatchModal');
+    }
+
+    // 이름칸을 클릭해도 체크박스가 체크되도록 돕는 함수
+    function toggleCheck(div) {
+        const cb = div.querySelector('input');
+        if (event.target !== cb) {
+            cb.checked = !cb.checked;
+        }
+    }
+
+    // '경기 추가' 버튼 눌렀을 때 실행되는 함수
+    function confirmManualMatch() {
+        const type = document.getElementById('manualMatchType').value;
+        const pA = Array.from(document.querySelectorAll('input[name="manual_pA"]:checked')).map(c => c.value);
+        const pB = Array.from(document.querySelectorAll('input[name="manual_pB"]:checked')).map(c => c.value);
+
+        // 유효성 검사 (인원수 체크)
+        if (type === '단식') {
+            if (pA.length !== 1 || pB.length !== 1) {
+                alert("단식은 각 팀에서 1명씩 선택해야 합니다."); return;
+            }
+        } else { // 복식
+            if (pA.length !== 2 || pB.length !== 2) {
+                alert("복식은 각 팀에서 2명씩 선택해야 합니다."); return;
+            }
+        }
+
+        closeModal('manualMatchModal');
+
+        // 다음 경기 번호 계산 (현재 경기 수 + 1)
+        const nextId = currentMatchData.lineups.length + 1;
+        
+        // 데이터 추가
+        currentMatchData.lineups.push({
+            id: nextId,
+            pA: pA,
+            pB: pB,
+            type: type,
+            probA: 50 // 수동은 승률 예측을 50:50으로 고정
+        });
+
+        render(); // 화면 갱신
+    }
+
+
+
 
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
 </script>
