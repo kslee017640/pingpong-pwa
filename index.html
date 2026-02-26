@@ -263,7 +263,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.70</span>
+                <span class="version-tag-inline">V1.72</span>
             </div>
         </div>
 
@@ -1164,9 +1164,12 @@
                         </div>`;
 
             currentSessionMoney.forEach(m => {
-                html += `<div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px dashed #ffe0b2;">
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px dashed #ffe0b2;">
                             <span style="color:#555;">${m.name}</span>
-                            <span style="font-weight:bold; color:#333;">${m.amount.toLocaleString()},000원</span>
+                            <div>
+                                <span style="font-weight:bold; color:#333; margin-right:8px;">${m.amount.toLocaleString()},000원</span>
+                                <button onclick="editDonation('${m.name}', ${m.amount})" style="padding:2px 8px; font-size:11px !important; background:#ffb74d; color:white; border-radius:4px; width:auto; border:none; cursor:pointer;">수정</button>
+                            </div>
                          </div>`;
             });
 
@@ -1579,16 +1582,96 @@
         // 다음 경기 번호 계산 (현재 경기 수 + 1)
         const nextId = currentMatchData.lineups.length + 1;
         
+        // ★ 추가된 부분: 예상 승률 계산 로직 (과거 기록 바탕)
+        let stats = {}; 
+        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+        Object.values(db.matchHistory).forEach(m => {
+            if(!m.results) return;
+            m.lineups.forEach(l => {
+                const res = m.results[l.id]; if(!res) return;
+                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+                lose.forEach(p => { if(stats[p]) stats[p].total++; });
+            });
+        });
+        
+        const winRates = {};
+        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+
+        // 선택된 A팀, B팀 선수들의 평균 승률 계산
+        const avgA = pA.reduce((s, p) => s + winRates[p], 0) / (pA.length || 1);
+        const avgB = pB.reduce((s, p) => s + winRates[p], 0) / (pB.length || 1);
+        
+        // A팀의 최종 예상 승률 계산
+        const calculatedProbA = Math.round(avgA / (avgA + avgB) * 100) || 50;
+
         // 데이터 추가
         currentMatchData.lineups.push({
             id: nextId,
             pA: pA,
             pB: pB,
             type: type,
-            probA: 50 // 수동은 승률 예측을 50:50으로 고정
+            probA: calculatedProbA // ★ 고정 50 대신 계산된 실제 확률 적용
         });
 
-        render(); // 화면 갱신
+        render();
+    }
+
+
+// =========================================================
+    // ★ 기부금 내역 수정 함수
+    // =========================================================
+    async function editDonation(name, oldAmount) {
+        if (!confirm(`${name}님의 기부금을 수정하시겠습니까?`)) return;
+
+        const input = prompt(`${name}님의 새로운 기부 금액을 입력하세요 (천원 단위)\n(예: 5000원이면 5 입력, 삭제하려면 0 입력)`, oldAmount);
+        
+        // 취소를 누르거나 빈 칸인 경우 무시
+        if (input === null || input.trim() === "") return; 
+        
+        const newAmount = parseInt(input);
+        if (isNaN(newAmount) || newAmount < 0) {
+            alert("올바른 금액(숫자)을 입력해주세요.");
+            return;
+        }
+
+        const date = document.getElementById('matchDate').value;
+        const session = document.getElementById('matchSession').value; 
+        const time = document.getElementById('matchTime').value;
+
+        // db에서 해당 데이터 찾아 수정
+        let found = false;
+        for (let i = 0; i < db.moneyHistory.length; i++) {
+            const m = db.moneyHistory[i];
+            if (m.date === date && String(m.session) === String(session) && m.time === time && m.name === name) {
+                
+                // 0원 입력 시 아예 내역에서 삭제
+                if (newAmount === 0) {
+                    db.moneyHistory.splice(i, 1);
+                } else {
+                    m.amount = newAmount;
+                }
+                found = true;
+                break;
+            }
+        }
+
+        // 수정사항이 클라우드에 반영되도록 저장 진행
+        if (found) {
+            document.getElementById('loading').style.display = 'flex';
+            try {
+                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
+                alert("기부 내역이 성공적으로 수정되었습니다.");
+                updateUI(); // 랭킹 화면 데이터 갱신
+                render();   // 현재 점수판 화면 갱신
+            } catch(e) {
+                alert("저장 중 오류가 발생했습니다.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        } else {
+            alert("해당 기부 내역을 찾을 수 없습니다.");
+        }
     }
 
 
