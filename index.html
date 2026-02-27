@@ -263,7 +263,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.72</span>
+                <span class="version-tag-inline">V1.73</span>
             </div>
         </div>
 
@@ -386,6 +386,10 @@
             <div id="lineupArea"></div>
 
             <button id="nextGameBtn" class="btn-orange" style="display:none; margin-bottom:10px; background:#795548;" onclick="openManualMatchModal()">➕ 다음 게임 생성 (수동)</button>
+            
+            <div style="text-align: right; margin-bottom: 5px;">
+                <button onclick="openManualDonationModal()" style="padding:6px 12px; font-size:11px !important; background:#ffb74d; color:white; border-radius:6px; border:none; box-shadow:0 2px 5px rgba(0,0,0,0.2); cursor:pointer;">💰 기부금 수동 추가</button>
+            </div>
 
             <button id="saveBtn" class="btn-blue" style="background:var(--primary); margin-top:5px;" onclick="handleManualSave()">🏁 경기 결과 최종 저장</button>
         </div>
@@ -517,6 +521,36 @@
         <button class="btn-blue" style="margin-top:15px;" onclick="saveMoneyAndFinish()">금액 저장 및 종료</button>
     </div>
 </div>
+
+<div id="manualDonationModal" class="modal-overlay" onclick="closeModalOnOuterClick(event, 'manualDonationModal')">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span style="font-weight: 800; font-size: 16px;">💰 기부금 수동 추가</span>
+            <span class="modal-close-x" onclick="closeModal('manualDonationModal')">×</span>
+        </div>
+        <p style="font-size:12px; color:#666; margin-top:0;">현재 회차에 누락된 기부금을 직접 입력하여 추가합니다.</p>
+        
+        <div class="input-group" style="margin-bottom:15px;">
+            <label class="filter-label">기부자 선택</label>
+            <select id="manualDonationName"></select>
+        </div>
+        
+        <div class="input-group" style="margin-bottom:15px;">
+            <label class="filter-label">추가할 금액 (천원 단위)</label>
+            <input type="number" id="manualDonationAmount" placeholder="예: 5000원이면 5 입력">
+        </div>
+
+        <button class="btn-blue" style="margin-top:15px; background:#ff9800;" onclick="saveManualDonation()">추가 및 클라우드 저장</button>
+    </div>
+</div>
+
+
+
+
+
+
+
+
 
 <script>
      /* [데이터 저장소] 구글 스프레드시트와 통신하는 주소예요 */
@@ -1671,6 +1705,76 @@
             }
         } else {
             alert("해당 기부 내역을 찾을 수 없습니다.");
+        }
+    }
+
+
+// =========================================================
+    // ★ 기부금 수동 추가 관련 함수들
+    // =========================================================
+    function openManualDonationModal() {
+        const select = document.getElementById('manualDonationName');
+        select.innerHTML = "";
+        
+        // 전체 인원(fixedList)을 선택지(옵션)로 생성
+        fixedList.forEach(name => {
+            select.innerHTML += `<option value="${name}">${name}</option>`;
+        });
+        
+        document.getElementById('manualDonationAmount').value = "";
+        openModal('manualDonationModal');
+    }
+
+    async function saveManualDonation() {
+        const name = document.getElementById('manualDonationName').value;
+        const amountStr = document.getElementById('manualDonationAmount').value;
+        const amount = parseInt(amountStr);
+        
+        if (isNaN(amount) || amount <= 0) {
+            alert("올바른 기부 금액(숫자)을 입력해주세요.");
+            return;
+        }
+
+        closeModal('manualDonationModal');
+
+        const date = document.getElementById('matchDate').value;
+        const session = document.getElementById('matchSession').value; 
+        const time = document.getElementById('matchTime').value;
+
+        // 동일한 사람이 해당 회차에 이미 낸 기록이 있는지 확인
+        let found = false;
+        for (let i = 0; i < db.moneyHistory.length; i++) {
+            const m = db.moneyHistory[i];
+            if (m.date === date && String(m.session) === String(session) && m.time === time && m.name === name) {
+                // 이미 기록이 있으면 기존 금액에 새로 입력한 금액을 합산
+                m.amount += amount;
+                found = true;
+                break;
+            }
+        }
+
+        // 기존 기록이 없으면 새 데이터 푸시
+        if (!found) {
+            db.moneyHistory.push({
+                date: date,
+                session: session, 
+                time: time,
+                name: name,
+                amount: amount
+            });
+        }
+
+        // 서버에 최종 저장
+        document.getElementById('loading').style.display = 'flex';
+        try {
+            await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
+            alert(`${name}님의 기부금(${amount},000원)이 성공적으로 추가되었습니다.`);
+            updateUI(); // 랭킹 화면 데이터 갱신
+            render();   // 현재 점수판 기부금 리스트 화면 갱신
+        } catch(e) {
+            alert("저장 중 오류가 발생했습니다.");
+        } finally {
+            document.getElementById('loading').style.display = 'none';
         }
     }
 
