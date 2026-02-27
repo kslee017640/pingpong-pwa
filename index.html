@@ -263,7 +263,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.73</span>
+                <span class="version-tag-inline">V1.75</span>
             </div>
         </div>
 
@@ -404,10 +404,11 @@
         <div class="box">
             <h3 style="text-align:center; margin-top:0; font-size:15px; color:#444;">조회 기간 설정</h3>
             <div class="period-btns">
-                <button class="btn-p active" onclick="setQuickPeriod(0, this)">전체</button>
-                <button class="btn-p" onclick="setQuickPeriod(1, this)">1개월</button>
-                <button class="btn-p" onclick="setQuickPeriod(2, this)">2개월</button>
-                <button class="btn-p" onclick="setQuickPeriod(3, this)">3개월</button>
+                <button class="btn-p" onclick="setQuickPeriod('week', 1, this)">1주</button>
+                <button class="btn-p" onclick="setQuickPeriod('week', 2, this)">2주</button>
+                <button class="btn-p" onclick="setQuickPeriod('week', 3, this)">3주</button>
+                <button class="btn-p" onclick="setQuickPeriod('month', 1, this)">1개월</button>
+                <button class="btn-p active" onclick="setQuickPeriod('all', 0, this)">전체</button>
             </div>
             <div class="flex-row">
                 <div class="input-group">
@@ -866,19 +867,45 @@
         // ★ 팝업 타이틀에 점심/저녁 구분을 표시
         let timeLabel = timeType === 'lunch' ? '☀️ 점심' : (timeType === 'dinner' ? '🌙 저녁' : '전체');
         
-        document.getElementById('recordModalTitle').innerHTML = `🔥 ${name} vs 상대 전적 [${timeLabel}] <span style="font-size:14px; color:var(--primary); margin-left:8px; font-weight:900;">(총 승률: ${overallWinRate}%)</span>`;
+        // ★ 총 승률을 다음 줄로 내리기 (div 태그로 감싸고 margin 설정)
+        document.getElementById('recordModalTitle').innerHTML = `
+            <div style="margin-bottom: 4px;">🔥 ${name} vs 상대 전적 [${timeLabel}]</div>
+            <div style="font-size:14px; color:var(--primary); font-weight:900;">(총 승률: ${overallWinRate}%)</div>
+        `;
 
         document.getElementById('recordTableArea').innerHTML = sorted.length ? html + "</table>" : "<p style='text-align:center; padding:20px;'>기록 없음</p>";
         openModal('recordModal');
     }
 
-    function setQuickPeriod(m, btn) {
-        document.querySelectorAll('.btn-p').forEach(b => b.classList.remove('active')); 
-        btn.classList.add('active');
-        const start = new Date(); 
-        if(m === 0) document.getElementById('statsStart').value = "";
-        else { start.setMonth(start.getMonth() - m); document.getElementById('statsStart').value = start.toISOString().split('T')[0]; }
-        updateUI();
+    // 파라미터가 type(주/월 구분), value(숫자), btn(클릭한 버튼) 3개로 늘어났습니다.
+    function setQuickPeriod(type, value, btn) {
+        // 버튼 활성화 클래스 변경 (active 색상 칠하기)
+        document.querySelectorAll('.btn-p').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        if(type === 'all') {
+            document.getElementById('statsStart').value = "";
+            document.getElementById('statsEnd').value = "";
+        } else {
+            let end = new Date();
+            let start = new Date();
+            
+            // ★ type에 따라 '일(day)'을 뺄지 '월(month)'을 뺄지 결정
+            if (type === 'week') {
+                start.setDate(start.getDate() - (value * 7)); // 1주는 7일
+            } else if (type === 'month') {
+                start.setMonth(start.getMonth() - value);
+            }
+            
+            // 한국 시간(KST) 기준으로 날짜 문자열(YYYY-MM-DD) 생성
+            const offset = start.getTimezoneOffset() * 60000;
+            const startKST = new Date(start.getTime() - offset).toISOString().split('T')[0];
+            const endKST = new Date(end.getTime() - offset).toISOString().split('T')[0];
+
+            document.getElementById('statsEnd').value = endKST;
+            document.getElementById('statsStart').value = startKST;
+        }
+        updateUI(); // 랭킹 화면 즉시 새로고침
     }
 
     function handleSmartStart() {
