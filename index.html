@@ -7,6 +7,8 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PING-PONG DB PRO</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/ping-pong.png">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/ping-pong.png">
@@ -263,7 +265,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.75</span>
+                <span class="version-tag-inline">V1.80</span>
             </div>
         </div>
 
@@ -423,6 +425,14 @@
             
             <h4 style="font-size:13px; border-left:3px solid #ff9800; padding-left:8px; margin:15px 0 5px 0;">☀️ 점심 파워 랭킹</h4>
             <div id="rankingTableArea_lunch"></div>
+
+            <div id="trendChartContainer" style="margin-top:15px; padding:10px; background:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:none;">
+                <h4 style="font-size:12px; color:#666; text-align:center; margin:0 0 10px 0;">📈 최근 4주 순위 변동</h4>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="rankTrendChart"></canvas>
+                </div>
+                <div id="customLegend" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px 4px; margin-top: 15px; justify-items: start; font-size: 11px;"></div>
+            </div>
 
             <h4 style="font-size:13px; border-left:3px solid #3f51b5; padding-left:8px; margin:20px 0 5px 0;">🌙 저녁 파워 랭킹</h4>
             <div id="rankingTableArea_dinner"></div>
@@ -789,6 +799,9 @@
         });
 
         document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
+
+        // ★ 순위 변동 차트 그리기 실행 (여기 추가!)
+        drawTrendChart();
     }
 
     // ★ 파라미터에 timeType 추가
@@ -1806,6 +1819,156 @@
     }
 
 
+
+// =========================================================
+    // ★ 순위 변동 차트 그리기 함수
+    // =========================================================
+    let rankChartInstance = null; // 차트 객체 저장용 변수
+
+    function drawTrendChart() {
+        if (!db.matchHistory || Object.keys(db.matchHistory).length === 0) return;
+
+        // 최근 28일 날짜 배열 구하기
+        const days = 28;
+        const labels = [];
+        const dates = [];
+        let today = new Date();
+        
+        for (let i = days - 1; i >= 0; i--) {
+            let d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const offset = d.getTimezoneOffset() * 60000;
+            const dateStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
+            dates.push(dateStr);
+            labels.push(dateStr.substring(5, 10)); // 화면 표시용 (MM-DD)
+        }
+
+        // 특정 날짜까지의 누적 랭킹 계산
+        const historyRanks = {};
+        fixedList.forEach(n => historyRanks[n] = []);
+
+        const getRankUpToDate = (targetDate) => {
+            let stats = {};
+            fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+
+            Object.keys(db.matchHistory).forEach(key => {
+                const datePart = key.substring(0, 10);
+                if (datePart > targetDate) return; 
+                if (!key.includes('_lunch_')) return; // 점심 랭킹만 계산
+
+                const m = db.matchHistory[key]; 
+                if(!m || !m.results) return;
+
+                m.lineups.forEach(l => {
+                    const res = m.results[l.id]; if(!res) return;
+                    const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+                    win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+                    lose.forEach(p => { if(stats[p]) stats[p].total++; });
+                });
+            });
+
+            // 순위 매기기 (게임수가 0인 사람은 순위에서 제외)
+            let sorted = Object.entries(stats).filter(x => x[1].total > 0).sort((a,b) => (b[1].win/b[1].total) - (a[1].win/a[1].total));
+            let rankMap = {};
+            sorted.forEach(([n, d], index) => { rankMap[n] = index + 1; });
+            return rankMap;
+        };
+
+        // 매일매일의 랭킹 수집
+        dates.forEach(date => {
+            const dailyRank = getRankUpToDate(date);
+            fixedList.forEach(n => {
+                historyRanks[n].push(dailyRank[n] || null); // 기록 없으면 null
+            });
+        });
+
+        // 차트용 데이터셋 구성 (각 사람별 선 그리기)
+        const datasets = [];
+        const colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'];
+        
+        fixedList.forEach((n, i) => {
+            if (historyRanks[n].every(val => val === null)) return; // 28일 내내 게임 안 한 사람은 제외
+
+            datasets.push({
+                label: n,
+                data: historyRanks[n],
+                borderColor: colors[i % colors.length],
+                backgroundColor: colors[i % colors.length],
+                borderWidth: 2,
+                pointRadius: 2,
+                fill: false,
+                tension: 0.1,
+                spanGaps: true // 중간에 게임 안 한 날이 있어도 선을 부드럽게 연결
+            });
+        });
+
+        document.getElementById('trendChartContainer').style.display = 'block';
+
+        // 기존 차트 지우고 새로 그리기
+        const ctx = document.getElementById('rankTrendChart').getContext('2d');
+        if (rankChartInstance) rankChartInstance.destroy();
+        
+        rankChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        reverse: true, // ★ 1위가 맨 위로 가도록 Y축 반전
+                        min: 1,
+                        ticks: { stepSize: 1, precision: 0 }
+                    }
+                },
+                plugins: {
+                    // ★ 기본 범례는 숨김 처리
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // ★ 커스텀 범례 렌더링 (클릭 시 그래프 On/Off 기능 포함)
+        const legendContainer = document.getElementById('customLegend');
+        legendContainer.innerHTML = ''; // 기존 내용 초기화
+
+        datasets.forEach((dataset, index) => {
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.cursor = 'pointer';
+            
+            // 색상 박스
+            const colorBox = document.createElement('span');
+            colorBox.style.width = '10px';
+            colorBox.style.height = '10px';
+            colorBox.style.backgroundColor = dataset.backgroundColor;
+            colorBox.style.display = 'inline-block';
+            colorBox.style.marginRight = '4px';
+            colorBox.style.borderRadius = '2px';
+            
+            // 이름 텍스트
+            const text = document.createElement('span');
+            text.innerText = dataset.label;
+            text.style.color = '#333';
+            text.style.letterSpacing = '-0.5px'; // 좁은 모바일 화면을 위해 글자간격 약간 축소
+            
+            item.appendChild(colorBox);
+            item.appendChild(text);
+
+            // 이름 클릭 시 선이 사라졌다 나타났다 하도록 토글 이벤트 추가
+            item.onclick = () => {
+                const meta = rankChartInstance.getDatasetMeta(index);
+                // hidden 상태 토글
+                meta.hidden = meta.hidden === null ? !rankChartInstance.data.datasets[index].hidden : null;
+                // 숨겨진 상태면 범례 글씨를 반투명하게 변경
+                item.style.opacity = meta.hidden ? '0.3' : '1'; 
+                rankChartInstance.update();
+            };
+
+            legendContainer.appendChild(item);
+        });
+    }
 
 
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
