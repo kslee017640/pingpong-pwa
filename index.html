@@ -242,6 +242,45 @@
         .vs-divider { display: block; font-size: 11px; color: #bbb; margin: 2px 0; font-weight: normal; }
 
         .money-input { width: 60px; text-align: right; padding: 4px; border-radius: 6px; border: 1px solid #ddd; }
+
+      /* ★ 랭킹 화면 하단 고정 탭 바 스타일 */
+        .rank-tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            max-width: 500px; /* PC 화면에서도 모바일 너비 유지 */
+            width: 100%;
+            display: flex;
+            background: #fff;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .rank-tab-btn {
+            flex: 1;
+            padding: 14px 0;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: #888;
+            border: none;
+            background: transparent;
+            border-top: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rank-tab-btn.active {
+            color: var(--primary);
+            border-top: 3px solid var(--primary);
+            background: #f1f8e9;
+        }
+        /* 랭킹 화면 하단에 탭 바 높이만큼 여백 주기 */
+        #rankLayer { padding-bottom: 60px; }
+
+
+
+
     </style>
 </head>
 <body>
@@ -265,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.80</span>
+                <span class="version-tag-inline">V1.90</span>
             </div>
         </div>
 
@@ -423,22 +462,34 @@
                 </div>
             </div>
             
-            <h4 style="font-size:13px; border-left:3px solid #ff9800; padding-left:8px; margin:15px 0 5px 0;">☀️ 점심 파워 랭킹</h4>
-            <div id="rankingTableArea_lunch"></div>
+            <div id="lunchRankSection">
+                <h4 style="font-size:13px; border-left:3px solid #ff9800; padding-left:8px; margin:15px 0 5px 0;">☀️ 점심 파워 랭킹</h4>
+                <div id="rankingTableArea_lunch"></div>
 
-            <div id="trendChartContainer" style="margin-top:15px; padding:10px; background:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:none;">
-                <h4 style="font-size:12px; color:#666; text-align:center; margin:0 0 10px 0;">📈 최근 4주 순위 변동</h4>
-                <div style="position: relative; height: 250px; width: 100%;">
-                    <canvas id="rankTrendChart"></canvas>
+                <div id="trendChartContainer" style="margin-top:15px; padding:10px; background:#fff; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); display:none;">
+                    <h4 style="font-size:12px; color:#666; text-align:center; margin:0 0 10px 0;">📈 최근 4주 순위 변동</h4>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="rankTrendChart"></canvas>
+                    </div>
+                    <div id="customLegend" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px 4px; margin-top: 15px; justify-items: start; font-size: 11px;"></div>
                 </div>
-                <div id="customLegend" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px 4px; margin-top: 15px; justify-items: start; font-size: 11px;"></div>
             </div>
 
-            <h4 style="font-size:13px; border-left:3px solid #3f51b5; padding-left:8px; margin:20px 0 5px 0;">🌙 저녁 파워 랭킹</h4>
-            <div id="rankingTableArea_dinner"></div>
-            
-            <h4 style="font-size:13px; border-left:3px solid var(--danger); padding-left:8px; margin:25px 0 5px 0;">💸 게임비 기부 랭킹</h4>
-            <div id="moneyRankingTableArea"></div>
+            <div id="dinnerRankSection" style="display:none;">
+                <h4 style="font-size:13px; border-left:3px solid #3f51b5; padding-left:8px; margin:15px 0 5px 0;">🌙 저녁 파워 랭킹</h4>
+                <div id="rankingTableArea_dinner"></div>
+            </div>
+
+            <div id="moneyRankSection" style="display:none;">
+                <h4 style="font-size:13px; border-left:3px solid #e53935; padding-left:8px; margin:15px 0 5px 0;">💰 게임비 기부 랭킹</h4>
+                <div id="moneyRankingTableArea"></div>
+            </div>
+
+            <div class="rank-tab-bar">
+                <button class="rank-tab-btn active" onclick="switchRankTab('lunch', this)">☀️ 점심 랭킹</button>
+                <button class="rank-tab-btn" onclick="switchRankTab('dinner', this)">🌙 저녁 랭킹</button>
+                <button class="rank-tab-btn" onclick="switchRankTab('money', this)">💰 게임비</button>
+            </div>
 
             <button class="btn-red" onclick="resetDatabase()">⚠️ 데이터 초기화</button>
         </div>
@@ -607,6 +658,47 @@
         initPlayerList(); 
         syncWithCloud();
     };
+
+
+    // =========================================================
+    // ★ 시간 제한 체크 함수 (점심: 11:30~13:00 / 저녁: 17:00~19:00)
+    // =========================================================
+    function checkTimeRestriction() {
+        const timeType = document.getElementById('matchTime').value; // 'lunch' 또는 'dinner'
+        const now = new Date();
+        const hh = now.getHours();
+        const mm = now.getMinutes();
+        const currentTime = hh * 60 + mm; // 계산을 쉽게 하기 위해 '분(minute)' 단위로 통일
+
+        let isValid = false;
+        
+        if (timeType === 'lunch') {
+            // 점심 제한: 11:30 (690분) ~ 13:00 (780분)
+            if (currentTime >= 690 && currentTime <= 780) isValid = true;
+        } else if (timeType === 'dinner') {
+            // 저녁 제한: 17:00 (1020분) ~ 19:00 (1140분)
+            if (currentTime >= 1020 && currentTime <= 1140) isValid = true;
+        } else {
+            isValid = true; // 다른 값이 있다면 기본 통과
+        }
+
+        // 지정된 시간이 아니면 팝업 띄우기
+        if (!isValid) {
+            const timeName = timeType === 'lunch' ? '점심' : '저녁';
+            const pw = prompt(`⛔ 현재 시간에는 ${timeName} 게임을 생성하거나 수정할 수 없습니다.\n(허용시간 - 점심: 11:30~13:00 / 저녁: 17:00~19:00)\n\n강제로 진행하시려면 관리자 암호를 입력하세요.`);
+            
+            if (pw === "7640") {
+                return true; // 기존에 쓰시던 초기화 암호(7640)와 동일하게 세팅 (원하시면 다른 숫자로 변경 가능)
+            } else {
+                if (pw !== null) alert("암호가 틀렸습니다. 작업이 취소됩니다.");
+                return false; // 차단
+            }
+        }
+        return true; // 정상 시간이면 통과
+    }
+
+
+
 
     /* [화면 전환 함수] */
     function showScreen(screenName) {
@@ -922,6 +1014,46 @@
     }
 
     function handleSmartStart() {
+        // ★ 추가된 스마트 로직: 실제 시간에 맞춰 점심/저녁 자동 변경 제안 및 빈 회차 세팅
+        const timeSelect = document.getElementById('matchTime');
+        const sessionSelect = document.getElementById('matchSession');
+        const dateStr = document.getElementById('matchDate').value;
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        
+        const isActualLunch = (currentTime >= 690 && currentTime <= 780); // 11:30 ~ 13:00
+        const isActualDinner = (currentTime >= 1020 && currentTime <= 1140); // 17:00 ~ 19:00
+
+        // 저녁 시간인데 점심을 선택한 경우
+        if (isActualDinner && timeSelect.value === 'lunch') {
+            if (confirm("지금은 저녁 시간입니다. 저녁 시간에 새로운 회차를 생성할까요?")) {
+                timeSelect.value = 'dinner';
+                // 저녁의 가장 빠른 빈 회차(1~10) 자동 탐색 및 세팅
+                for (let s = 1; s <= 10; s++) {
+                    if (!db.matchHistory[`${dateStr}_dinner_s${s}`]) {
+                        sessionSelect.value = s;
+                        break;
+                    }
+                }
+            }
+        } 
+        // 점심 시간인데 저녁을 선택한 경우 (보너스 추가)
+        else if (isActualLunch && timeSelect.value === 'dinner') {
+            if (confirm("지금은 점심 시간입니다. 점심 시간에 새로운 회차를 생성할까요?")) {
+                timeSelect.value = 'lunch';
+                // 점심의 가장 빠른 빈 회차(1~10) 자동 탐색 및 세팅
+                for (let s = 1; s <= 10; s++) {
+                    if (!db.matchHistory[`${dateStr}_lunch_s${s}`]) {
+                        sessionSelect.value = s;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 제안 이후 혹은 제안을 거절했을 경우 기존처럼 시간 제한 검사 진행
+        if (!checkTimeRestriction()) return;
         if (!checkAccess()) return; 
         const d = document.getElementById('matchDate').value;
         const t = document.getElementById('matchTime').value;
@@ -1419,6 +1551,7 @@
 
     function handleManualSave() { 
         if (!checkAccess()) return; 
+        if (!checkTimeRestriction()) return; // ★ 저장할 때도 시간 체크 추가!
         if(confirm("최종 저장하시겠습니까?")) {
             let a=0, b=0;
             Object.values(currentMatchData.results).forEach(v=>(v==='A'?a++:(v==='B'?b++:0)));
@@ -1969,6 +2102,30 @@
             legendContainer.appendChild(item);
         });
     }
+
+
+// =========================================================
+    // ★ 랭킹 화면 하단 탭 전환 함수
+    // =========================================================
+    function switchRankTab(tabName, btnElement) {
+        // 1. 모든 섹션 숨기기
+        document.getElementById('lunchRankSection').style.display = 'none';
+        document.getElementById('dinnerRankSection').style.display = 'none';
+        document.getElementById('moneyRankSection').style.display = 'none';
+        
+        // 2. 모든 탭 버튼 색상(active) 빼기
+        document.querySelectorAll('.rank-tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // 3. 선택한 섹션만 보여주고, 누른 버튼에 색상 칠하기
+        document.getElementById(tabName + 'RankSection').style.display = 'block';
+        if (btnElement) {
+            btnElement.classList.add('active');
+        }
+    }
+
+
 
 
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./service-worker.js"); }
