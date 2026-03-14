@@ -1131,30 +1131,91 @@
         const winRates = {};
         fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
 
-        let aPool = [], bPool = [];
+       let aPool = [], bPool = [];
         
+        // 1. 기본 모드에 따른 팀 1차 분배
         if (currentBalanceMode === 'tight') {
-            // [박빙] 승률 높은 순서대로 정렬 (완전 실력순)
             const sorted = [...selected].sort((p1, p2) => winRates[p2] - winRates[p1]);
-            // 스네이크 방식으로 팀 배분 (1등->A, 2등->B, 3등->B, 4등->A ...)
             sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
-        
         } else if (currentBalanceMode === 'balance') {
-            // [밸런스] 승률에 '랜덤 노이즈'를 섞어서 정렬
-            // 노이즈 범위 0.4는 승률 40% 정도의 변동폭을 의미 (적당한 섞임)
             const sorted = [...selected].sort((p1, p2) => {
                 const score1 = winRates[p1] + (Math.random() * 0.4); 
                 const score2 = winRates[p2] + (Math.random() * 0.4);
                 return score2 - score1;
             });
-            // 섞인 순서대로 스네이크 방식 배분 (밸런스 유지)
             sorted.forEach((p, i) => (Math.floor(i / 2) % 2 === 0 ? (i % 2 === 0 ? aPool : bPool) : (i % 2 === 0 ? bPool : aPool)).push(p));
-            
         } else {
-            // [운빨] 완전 무작위 셔플
             const shuffled = [...selected].sort(() => Math.random() - 0.5);
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
         }
+
+        // =========================================================
+        // ★ 은밀한 이스터에그: 이경상 특별 조건 개입 로직 시작
+        // =========================================================
+        // ★ 수정됨: 박빙(tight) 모드가 아닐 때(밸런스, 운빨)만 이스터에그 작동!
+        if (selected.includes("이경상") && currentBalanceMode !== 'tight') {
+            // 이경상이 속한 팀과 반대 팀 찾기
+            let myTeam = aPool.includes("이경상") ? aPool : bPool;
+            let oppTeam = myTeam === aPool ? bPool : aPool;
+
+            // 1. 이명철과 80% 이상의 확률로 다른 편 되기 (85%로 세팅)
+            if (selected.includes("이명철") && Math.random() < 0.85) { 
+                if (myTeam.includes("이명철")) {
+                    // 이명철이 같은 팀이면, 반대 팀의 다른 사람(무작위)과 맞바꿈
+                    let myTeamOthers = myTeam.filter(p => p !== "이경상" && p !== "이명철");
+                    let oppTeamOthers = oppTeam.filter(p => p !== "이명철");
+                    
+                    if (oppTeamOthers.length > 0) {
+                        let oppRandom = oppTeamOthers[Math.floor(Math.random() * oppTeamOthers.length)];
+                        
+                        myTeam.splice(myTeam.indexOf("이명철"), 1);
+                        myTeam.push(oppRandom);
+                        
+                        oppTeam.splice(oppTeam.indexOf(oppRandom), 1);
+                        oppTeam.push("이명철");
+                    }
+                }
+            }
+
+            // 2. 김현진, 이진행, 김기협과 같은 편 되기
+            let targetFriends = ["김현진", "이진행", "김기협"]; // 배열 순서가 우선순위
+            let presentFriends = targetFriends.filter(f => selected.includes(f));
+            
+            if (presentFriends.length > 0) {
+                // 모드별 기본 확률 설정 (박빙 모드는 이스터에그가 안 도니까 제외)
+                let baseProb = 0.5;
+                if (currentBalanceMode === 'balance') baseProb = 0.65;
+                else if (currentBalanceMode === 'random') baseProb = 0.75;
+                
+                presentFriends.forEach((friend, idx) => {
+                    // 친구가 반대 팀(oppTeam)에 있을 경우
+                    if (oppTeam.includes(friend)) {
+                        // 우선순위 높은 사람일수록 확률 보정 (+10% ~ -10%)
+                        let swapChance = baseProb + (0.1 - (idx * 0.1)); 
+                        
+                        if (Math.random() < swapChance) {
+                            // 내 팀에서 희생양 1명 무작위 선택 (이경상, 이명철, 타겟친구들 제외)
+                            let myTeamOthers = myTeam.filter(p => p !== "이경상" && !targetFriends.includes(p) && p !== "이명철");
+                            if (myTeamOthers.length > 0) {
+                                let myRandom = myTeamOthers[Math.floor(Math.random() * myTeamOthers.length)];
+                                
+                                // 교환
+                                oppTeam.splice(oppTeam.indexOf(friend), 1);
+                                oppTeam.push(myRandom);
+                                
+                                myTeam.splice(myTeam.indexOf(myRandom), 1);
+                                myTeam.push(friend);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        // =========================================================
+        // ★ 은밀한 이스터에그 로직 끝
+        // =========================================================
+
+        const wc = parseInt(document.getElementById('winCondition').value) || 1;
 
         // 팀 분배 후 대진표 생성 진행
         generateMatchups(aPool, bPool, selected, winRates);
@@ -1641,6 +1702,14 @@
                 else bPool.push(p);
             });
         }
+       
+
+
+       
+
+
+
+
 
         // 팀 정보 업데이트
         currentMatchData.teams.a = aPool;
