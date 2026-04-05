@@ -304,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V1.90</span>
+                <span class="version-tag-inline">V2.00</span>
             </div>
         </div>
 
@@ -380,7 +380,7 @@
                 </div>
                 <div class="switch-container">
                     <div id="balance_tight" class="switch-btn active" onclick="setBalanceMode('tight')">⚖️ 박빙</div>
-                    <div id="balance_balance" class="switch-btn" onclick="setBalanceMode('balance')">⚖️🎲 밸런스</div> 
+                    <div id="balance_balance" class="switch-btn" onclick="setBalanceMode('balance')">⚖️🎲 어중간</div> 
                     <div id="balance_random" class="switch-btn" onclick="setBalanceMode('random')">🎲 운빨</div>
                 </div>
 
@@ -1498,18 +1498,195 @@
         finally { document.getElementById('loading').style.display = 'none'; }
     }
 
-    function handlePostSavePopups(losers) {
-        if (!losers || losers.length === 0) return;
-        if (losers.length > 1) {
-            if (confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
-                applyToltol(losers);
-            } else {
-                confirmMoneyInput(losers);
+    // [변경 전]
+        // function handlePostSavePopups(losers) {
+        //     if (!losers || losers.length === 0) return;
+        //     if (losers.length > 1) {
+        //         if (confirm("패배팀은 똘똘말이를 하시겠습니까?")) {
+        //             applyToltol(losers); 
+        //         } else {
+        //             confirmMoneyInput(losers); 
+        //         }
+        //     } else {
+        //         confirmMoneyInput(losers);
+        //     }
+        // }
+
+        // [변경 후]
+        function handlePostSavePopups(losers) {
+            if (!losers || losers.length === 0) return;
+            
+            // 1명이 패배한 경우 (단식) 혼자서 3000원을 다 냄
+            if (losers.length === 1) {
+                if(confirm(`${losers[0]}님이 게임비 3,000원을 납부하시겠습니까?`)) {
+                    addMoneyRecord(losers[0], 3000);
+                }
+                return;
             }
-        } else {
-            confirmMoneyInput(losers);
+
+            // 2명 이상일 경우 차등 정산 팝업 호출
+            showDifferentialFeeModal(losers);
         }
-    }
+
+
+// [신규 수정] 자동 계산 방식의 차등 게임비 정산 팝업 로직
+        function showDifferentialFeeModal(losers) {
+            const N = losers.length;
+            const d = 6000 / (N - 1); // 등차수열 단위 계산
+            
+            // 1. 현재 세션(전체 게임) 통계 계산
+            const stats = {};
+            losers.forEach(name => {
+                stats[name] = { games: 0, wins: 0, winRate: 0 };
+            });
+
+            // currentMatchData를 참조하여 패배자들의 전체 게임 승률 계산
+            if (typeof currentMatchData !== 'undefined' && currentMatchData.lineups) {
+                currentMatchData.lineups.forEach(match => {
+                    if (currentMatchData.results[match.id]) {
+                        const result = currentMatchData.results[match.id];
+                        const winTeam = result === 'A' ? match.pA : match.pB;
+                        const loseTeam = result === 'A' ? match.pB : match.pA;
+
+                        losers.forEach(name => {
+                            if (winTeam.includes(name)) {
+                                stats[name].games++;
+                                stats[name].wins++;
+                            } else if (loseTeam.includes(name)) {
+                                stats[name].games++;
+                            }
+                        });
+                    }
+                });
+
+                losers.forEach(name => {
+                    if (stats[name].games > 0) {
+                        stats[name].winRate = stats[name].wins / stats[name].games;
+                    }
+                });
+            }
+
+            // 2. 승률 -> 게임 수 내림차순 정렬
+            const sortedLosers = losers.map(name => ({
+                name: name,
+                games: stats[name].games,
+                wins: stats[name].wins,
+                winRate: stats[name].winRate
+            })).sort((a, b) => {
+                if (b.winRate !== a.winRate) return b.winRate - a.winRate; // 1순위: 승률 높은 순
+                return b.games - a.games; // 2순위: 치른 게임이 많은 순
+            });
+
+            // 3. 순위 및 금액 할당 (동률 처리 로직 포함)
+            const standardAmounts = Array.from({length: N}, (_, i) => i * d);
+            let results = [];
+            let i = 0;
+            
+            while (i < N) {
+                let tieCount = 1;
+                // 승률과 게임 수가 모두 같은지 동률 확인
+                while (i + tieCount < N && 
+                       sortedLosers[i].winRate === sortedLosers[i + tieCount].winRate && 
+                       sortedLosers[i].games === sortedLosers[i + tieCount].games) {
+                    tieCount++;
+                }
+                
+                // 동률인 그룹이 차지하는 순위들의 기본 금액을 합산 후 N분의 1
+                let totalAmount = 0;
+                for (let j = 0; j < tieCount; j++) {
+                    totalAmount += standardAmounts[i + j];
+                }
+                const sharedAmount = totalAmount / tieCount;
+                
+                for (let j = 0; j < tieCount; j++) {
+                    results.push({
+                        name: sortedLosers[i + j].name,
+                        rank: i + 1, // 공동 순위 표기 (예: 1등 다음 또 1등)
+                        amount: sharedAmount,
+                        stats: sortedLosers[i + j]
+                    });
+                }
+                i += tieCount;
+            }
+
+            // 4. 모달 UI 생성
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'modal-overlay';
+            modalOverlay.style.display = 'flex';
+            
+            let html = `
+                <div class="modal-content" style="max-width: 350px;">
+                    <h3 style="margin-top:0; color: var(--danger); text-align:center;">💸 게임비 자동 정산</h3>
+                    <p style="text-align:center; font-size:13px; color:#555; margin-bottom: 5px;">
+                        총 인원: ${N}명 (총 게임비: ${N * 3000}원)<br>
+                        <span style="color:var(--primary); font-weight:bold;">승률 > 참여 게임 수</span> 순으로 자동 산정되었습니다.
+                    </p>
+                    <p style="font-size:11px; color:#888; text-align:center; margin-top:0px; margin-bottom:15px;">
+                        * 동률 발생 시, 해당 순위의 금액을 합산하여 똑같이 나눕니다.
+                    </p>
+                    <div id="feeCalculationList" style="margin-bottom: 20px;">
+            `;
+
+            // 결과 화면에 출력
+            results.forEach(res => {
+                const rateText = res.stats.games > 0 ? Math.round(res.stats.winRate * 100) + '%' : '0%';
+                const statText = `${res.stats.games}전 ${res.stats.wins}승 (${rateText})`;
+                const amountText = res.amount === 0 ? '면제 🎉' : Math.round(res.amount).toLocaleString() + '원';
+                const color = res.amount === 0 ? 'var(--primary)' : 'var(--danger)';
+
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:#f4f4f4; padding:12px; border-radius:10px;">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-weight:bold; font-size:15px;">${res.rank}등 ${res.name}</span>
+                            <span style="font-size:11px; color:#666;">${statText}</span>
+                        </div>
+                        <span style="color:${color}; font-weight:bold; font-size:16px;">
+                            ${amountText}
+                        </span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <button id="applyAutoFeeBtn" class="btn-blue" style="width:100%;">이대로 정산 내역 저장하기</button>
+                    <button class="btn-red" style="width:100%; margin-top:8px;" onclick="closeDifferentialModal(this)">건너뛰기 (저장안함)</button>
+                </div>
+            `;
+            
+            modalOverlay.innerHTML = html;
+            document.body.appendChild(modalOverlay);
+
+            // 모달 닫기
+            window.closeDifferentialModal = function(btnElement) {
+                const overlay = btnElement.closest('.modal-overlay');
+                if(overlay) overlay.remove();
+            };
+
+            // 저장 버튼 이벤트
+            modalOverlay.querySelector('#applyAutoFeeBtn').onclick = function() {
+                results.forEach(res => {
+                    if(res.amount > 0) {
+                        // 기존의 게임비 저장 함수 호출
+                        if(typeof addMoneyRecord === 'function') {
+                            addMoneyRecord(res.name, res.amount); 
+                        }
+                    }
+                });
+                alert("자동 정산된 차등 게임비가 성공적으로 저장되었습니다!");
+                closeDifferentialModal(this);
+            };
+        }
+
+
+
+
+
+
+
+
+
+
 
     function confirmMoneyInput(losers) {
         setTimeout(() => {
@@ -1519,24 +1696,7 @@
         }, 300);
     }
 
-    function applyToltol(losers) {
-        document.querySelectorAll('input[name="player"]').forEach(cb => cb.checked = false);
-        losers.forEach(name => {
-            const cb = document.querySelector(`input[name="player"][value="${name}"]`);
-            if(cb) cb.checked = true;
-        });
-        updateCount();
-        let curS = parseInt(document.getElementById('matchSession').value);
-        if(curS < 10) {
-            document.getElementById('matchSession').value = curS + 1;
-            checkDateData(); 
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        // ★ 똘똘말이 대전으로 예약
-        isNextToltol = true; 
-        
-        alert("패배 인원이 선택되었습니다. 다음 대진을 생성하세요. (똘똘말이 대전 예정)");
-    }
+
 
     function showMoneyInputModal(losers) {
         const listArea = document.getElementById('moneyInputList');
