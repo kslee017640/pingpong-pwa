@@ -304,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V2.00</span>
+                <span class="version-tag-inline">V2.03</span>
             </div>
         </div>
 
@@ -641,14 +641,15 @@
         }
     }
 
-    const fixedList = ["김기협", "김학기", "김현진", "이경상", "이명철", "이주항", "이준호", "이진행", "김용범", "이석현", "조커1", "조커2"];
+    const fixedList = ["김기협", "김현진", "이경상", "이명철", "이주항", "이준호", "이진행", "이석현", "김학기", "김용범", "조커1", "조커2"];
     let db = { matchHistory: {}, moneyHistory: [] }; 
     let currentMatchData = null;
-    let currentBalanceMode = 'tight';
+    let currentBalanceMode = 'random'; // 기본 선택 UI(운빨)와 실제 동작을 일치
     let isManualTeamMode = false; // ★ 수동 팀 선정 모드 상태 변수
     let isManualMatchMode = false; // ★ 대진 생성 방식(자동/수동) 변수
     let isAlreadySaved = false;
     let isNextToltol = false; // ★ 똘똘말이 대전 예약 상태 추가
+    let lastMonthRankCache = null; // ★ 최근 1개월 등수 계산 캐시(대진 렌더링 속도 개선)
 
 
     window.onload = function() {
@@ -756,9 +757,30 @@
                 if(!db.matchHistory) db.matchHistory = {}; 
                 if(!db.moneyHistory) db.moneyHistory = []; 
             }
+            invalidateRankCache();
             updateUI(); 
             checkDateData();
         } catch(e) { console.error(e); }
+    }
+
+    async function saveDatabaseToCloud() {
+        const payload = JSON.stringify({ type: "SAVE", db: db });
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: payload
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return true;
+        } catch (e) {
+            // Apps Script 배포 설정에 따라 CORS 응답 확인이 막힐 수 있어 기존 방식으로 한 번 더 저장을 시도합니다.
+            console.warn("표준 저장 요청 실패, no-cors 방식으로 재시도합니다.", e);
+            await fetch(API_URL, { method: "POST", body: payload, mode: "no-cors" });
+            return true;
+        }
     }
 
     function checkDateData() {
@@ -1375,15 +1397,21 @@
 
 
 
-// ★ [새로 추가된 부분] 선수의 최근 1개월 등수를 계산해주는 함수 (점심 랭킹만!)
-    function getPlayerRankLastMonth(playerName) {
+// ★ 선수의 최근 1개월 등수를 계산해주는 함수 (점심 랭킹만!)
+    function invalidateRankCache() {
+        lastMonthRankCache = null;
+    }
+
+    function getLastMonthRankMap() {
+        if (lastMonthRankCache) return lastMonthRankCache;
+
         let stats = {};
         const now = new Date();
         const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
         if (typeof db !== 'undefined' && db.matchHistory) {
             Object.keys(db.matchHistory).forEach(key => {
-                // ★ [수정된 마법 주문] 한글 '점심' 대신, 실제 데이터베이스 이름표인 '_lunch_'를 찾습니다!
+                // ★ 실제 데이터베이스 이름표인 '_lunch_'만 최근 1개월 등수 계산에 사용합니다.
                 if (!key.includes('_lunch_')) return;
 
                 const dateStr = key.substring(0, 10);
@@ -1412,26 +1440,30 @@
         }
 
         let rankList = Object.keys(stats).map(p => {
-            return { name: p, winRate: stats[p].total > 0 ? (stats[p].wins / stats[p].total) : 0, wins: stats[p].wins };
+            return {
+                name: p,
+                winRate: stats[p].total > 0 ? (stats[p].wins / stats[p].total) : 0,
+                wins: stats[p].wins,
+                total: stats[p].total
+            };
         });
         
         rankList.sort((a, b) => {
-            if (b.winRate === a.winRate) return b.wins - a.wins;
+            if (b.winRate === a.winRate) {
+                if (b.wins === a.wins) return b.total - a.total;
+                return b.wins - a.wins;
+            }
             return b.winRate - a.winRate;
         });
 
-        let myRankIndex = rankList.findIndex(r => r.name === playerName);
-        if (myRankIndex === -1) return '-';
-        return myRankIndex + 1;
+        lastMonthRankCache = {};
+        rankList.forEach((r, index) => { lastMonthRankCache[r.name] = index + 1; });
+        return lastMonthRankCache;
     }
 
-
-
-
-
-
-
-
+    function getPlayerRankLastMonth(playerName) {
+        return getLastMonthRankMap()[playerName] || '-';
+    }
 
     function render() {
         if(!currentMatchData || !currentMatchData.lineups) return;
@@ -1464,6 +1496,8 @@
 
 
 
+        const lastMonthRankMap = getLastMonthRankMap();
+
         currentMatchData.lineups.forEach(m => {
             const win = currentMatchData.results[m.id], typeClass = m.type === '단식' ? 'type-singles' : 'type-doubles';
             const probA = m.probA || 50;
@@ -1475,15 +1509,16 @@
             // ★ [수정된 부분 1] 선수 이름표를 등수와 함께 예쁘게 만들어주는 지팡이 추가
             function formatPlayers(players) {
                 if (players.length === 1) {
-                    let r = getPlayerRankLastMonth(players[0]);
+                    let r = lastMonthRankMap[players[0]] || '-';
                     return `${players[0]} <span style="font-size:12px; color:#555;">(${r}등)</span>`;
                 } else if (players.length === 2) {
-                    let r1 = getPlayerRankLastMonth(players[0]);
-                    let r2 = getPlayerRankLastMonth(players[1]);
+                    let r1 = lastMonthRankMap[players[0]] || '-';
+                    let r2 = lastMonthRankMap[players[1]] || '-';
                     // 둘 다 등수가 있으면 더해주고, 한명이라도 없으면 '?' 로 표시
                     let sum = (r1 !== '-' && r2 !== '-') ? (parseInt(r1) + parseInt(r2)) : '?';
-                    return `${players[0]}<span style="font-size:12px; color:#555;">(${r1}등)</span>, ` + 
-                           `${players[1]}<span style="font-size:12px; color:#555;">(${r2}등)</span> ` + 
+                    // ★ 복식은 선수 2명을 각각 한 줄로 표시해 이름/등수가 어중간하게 줄바꿈되지 않도록 정리합니다.
+                    return `${players[0]}<span style="font-size:12px; color:#555;">(${r1}등)</span><br>` + 
+                           `${players[1]}<span style="font-size:12px; color:#555;">(${r2}등)</span>` + 
                            `<br><span style="font-size:12px; color:var(--primary); font-weight:bold;">[합: ${sum}등]</span>`;
                 }
                 return players.join(', ');
@@ -1590,8 +1625,9 @@
 
         document.getElementById('loading').style.display = 'flex';
         db.matchHistory[getCurrentKey()] = currentMatchData;
+        invalidateRankCache();
         try { 
-            await fetch(API_URL, {method:"POST", body:JSON.stringify({type:"SAVE", db:db}), mode:'no-cors'}); 
+            await saveDatabaseToCloud(); 
             alert("기록이 저장되었습니다."); 
             isAlreadySaved = true; 
             await syncWithCloud();
@@ -1685,7 +1721,7 @@
         if(hasData) {
             document.getElementById('loading').style.display = 'flex';
             try {
-                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
+                await saveDatabaseToCloud();
                 alert("기부액이 성공적으로 저장되었습니다.");
             } catch(e) {
                 alert("저장 중 오류가 발생했습니다.");
@@ -1702,8 +1738,9 @@
         if (pw === "7640" && confirm("초기화할까요?")) {
             document.getElementById('loading').style.display = 'flex';
             db = { matchHistory: {}, moneyHistory: [] };
+            invalidateRankCache();
             try { 
-                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'}); 
+                await saveDatabaseToCloud(); 
                 alert("초기화됨"); 
                 updateUI(); 
             }
@@ -1917,23 +1954,23 @@
         const gridA = document.getElementById('manualMatchGridA');
         gridA.innerHTML = "";
         currentMatchData.teams.a.forEach(name => {
-            gridA.innerHTML += `<div class="player-item" onclick="toggleCheck(this)"><input type="checkbox" name="manual_pA" value="${name}"> <span>${name}</span></div>`;
+            gridA.innerHTML += `<div class="player-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="manual_pA" value="${name}"> <span>${name}</span></div>`;
         });
 
         // B팀 선수 목록 그리기 (체크박스)
         const gridB = document.getElementById('manualMatchGridB');
         gridB.innerHTML = "";
         currentMatchData.teams.b.forEach(name => {
-            gridB.innerHTML += `<div class="player-item" onclick="toggleCheck(this)"><input type="checkbox" name="manual_pB" value="${name}"> <span>${name}</span></div>`;
+            gridB.innerHTML += `<div class="player-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="manual_pB" value="${name}"> <span>${name}</span></div>`;
         });
 
         openModal('manualMatchModal');
     }
 
     // 이름칸을 클릭해도 체크박스가 체크되도록 돕는 함수
-    function toggleCheck(div) {
+    function toggleCheck(div, e) {
         const cb = div.querySelector('input');
-        if (event.target !== cb) {
+        if (e.target !== cb) {
             cb.checked = !cb.checked;
         }
     }
@@ -2038,7 +2075,7 @@
         if (found) {
             document.getElementById('loading').style.display = 'flex';
             try {
-                await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
+                await saveDatabaseToCloud();
                 alert("기부 내역이 성공적으로 수정되었습니다.");
                 updateUI(); // 랭킹 화면 데이터 갱신
                 render();   // 현재 점수판 화면 갱신
@@ -2111,7 +2148,7 @@
         // 서버에 최종 저장
         document.getElementById('loading').style.display = 'flex';
         try {
-            await fetch(API_URL, {method: "POST", body: JSON.stringify({type: "SAVE", db: db}), mode: 'no-cors'});
+            await saveDatabaseToCloud();
             alert(`${name}님의 기부금(${amount},000원)이 성공적으로 추가되었습니다.`);
             updateUI(); // 랭킹 화면 데이터 갱신
             render();   // 현재 점수판 기부금 리스트 화면 갱신
@@ -2303,3 +2340,7 @@
 </script>
 </body>
 </html>
+
+
+
+
