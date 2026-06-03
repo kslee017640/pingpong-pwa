@@ -304,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V2.03</span>
+                <span class="version-tag-inline">V2.06</span>
             </div>
         </div>
 
@@ -650,6 +650,7 @@
     let isAlreadySaved = false;
     let isNextToltol = false; // ★ 똘똘말이 대전 예약 상태 추가
     let lastMonthRankCache = null; // ★ 최근 1개월 등수 계산 캐시(대진 렌더링 속도 개선)
+    let rankChartDirty = true; // [V2.04 수정] 랭킹 차트는 데이터가 바뀐 뒤에만 다시 그립니다 -CODEX
 
 
     window.onload = function() {
@@ -748,22 +749,82 @@
     function closeClickOut(e, id) { if(e.target.id === id) closeModal(id); }
     function getCurrentKey() { return `${document.getElementById('matchDate').value}_${document.getElementById('matchTime').value}_s${document.getElementById('matchSession').value}`; }
 
+    // [V2.04 수정] 여러 대진 생성 함수에서 반복하던 전체 승률 계산을 공통 함수로 정리합니다 -CODEX
+    function getWinRateMap() {
+        let stats = {};
+        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
+
+        Object.values(db.matchHistory || {}).forEach(m => {
+            if(!m || !m.results || !m.lineups) return;
+            m.lineups.forEach(l => {
+                const res = m.results[l.id]; if(!res) return;
+                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
+                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
+                lose.forEach(p => { if(stats[p]) stats[p].total++; });
+            });
+        });
+
+        const winRates = {};
+        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        return winRates;
+    }
+
+    function getMoneyEntryKey(entry) {
+        return `${entry.date}_${entry.time}_s${entry.session}_${entry.name}`;
+    }
+
+    // [V2.04 수정] 같은 날짜/시간/회차/이름의 기부금은 저장 전에 하나로 합산해 수정 대상을 명확하게 합니다 -CODEX
+    function mergeMoneyHistory() {
+        const merged = {};
+        (db.moneyHistory || []).forEach(entry => {
+            if (!entry || !entry.name) return;
+            const amount = parseInt(entry.amount);
+            if (isNaN(amount) || amount <= 0) return;
+            const key = getMoneyEntryKey(entry);
+            if (!merged[key]) {
+                merged[key] = { date: entry.date, session: entry.session, time: entry.time, name: entry.name, amount: 0 };
+            }
+            merged[key].amount += amount;
+        });
+        db.moneyHistory = Object.values(merged);
+    }
+
+    async function readDatabaseFromCloud() {
+        const response = await fetch(`${API_URL}?t=${Date.now()}`);
+        const text = await response.text();
+        if (!text || text === "EMPTY") return { matchHistory: {}, moneyHistory: [] };
+        const parsed = JSON.parse(text);
+        if(!parsed.matchHistory) parsed.matchHistory = {};
+        if(!parsed.moneyHistory) parsed.moneyHistory = [];
+        return parsed;
+    }
+
+    function isSameMatchData(a, b) {
+        return JSON.stringify(a || null) === JSON.stringify(b || null);
+    }
+
+    // [V2.04 수정] 경기 저장 후 서버에서 다시 읽어 실제 반영 여부를 확인합니다 -CODEX
+    async function verifyCloudMatchSaved(key, expectedMatchData) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        const cloudDb = await readDatabaseFromCloud();
+        if (!cloudDb.matchHistory || !isSameMatchData(cloudDb.matchHistory[key], expectedMatchData)) {
+            throw new Error("저장 검증 실패");
+        }
+        return cloudDb;
+    }
+
     async function syncWithCloud() {
         try { 
-            const response = await fetch(`${API_URL}?t=${Date.now()}`);
-            const text = await response.text(); 
-            if(text && text !== "EMPTY") { 
-                db = JSON.parse(text); 
-                if(!db.matchHistory) db.matchHistory = {}; 
-                if(!db.moneyHistory) db.moneyHistory = []; 
-            }
+            db = await readDatabaseFromCloud();
+            mergeMoneyHistory();
             invalidateRankCache();
             updateUI(); 
             checkDateData();
         } catch(e) { console.error(e); }
     }
 
-    async function saveDatabaseToCloud() {
+    async function saveDatabaseToCloud(verifyKey = null, expectedMatchData = null) {
+        mergeMoneyHistory();
         const payload = JSON.stringify({ type: "SAVE", db: db });
 
         try {
@@ -774,11 +835,13 @@
             });
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (verifyKey) await verifyCloudMatchSaved(verifyKey, expectedMatchData);
             return true;
         } catch (e) {
             // Apps Script 배포 설정에 따라 CORS 응답 확인이 막힐 수 있어 기존 방식으로 한 번 더 저장을 시도합니다.
             console.warn("표준 저장 요청 실패, no-cors 방식으로 재시도합니다.", e);
             await fetch(API_URL, { method: "POST", body: payload, mode: "no-cors" });
+            if (verifyKey) await verifyCloudMatchSaved(verifyKey, expectedMatchData);
             return true;
         }
     }
@@ -796,6 +859,7 @@
             document.getElementById('dateStatus').innerHTML = "⚪ 기록 없음 (새 대진 생성 가능)";
             document.getElementById('dateStatus').style.color = "#ccc";
             document.getElementById('matchArea').style.display = 'none';
+            currentMatchData = null; // [V2.04 수정] 회차 변경 시 이전 대진 데이터가 남지 않도록 초기화합니다 -CODEX
             isAlreadySaved = false;
         }
     }
@@ -890,7 +954,6 @@
         // [6] 게임비 기부 랭킹 출력 (하단) - 정렬: 기부액 많은순 > 똘똘말이 패배 많은순 > 일반 패배 많은순
         let mSorted = Object.entries(moneyStats).filter(x => x[1].money > 0 || x[1].loses > 0).sort((a,b) => {
             if(b[1].money !== a[1].money) return b[1].money - a[1].money;
-            if(b[1].toltolLoses !== a[1].toltolLoses) return b[1].toltolLoses - a[1].toltolLoses;
             return b[1].loses - a[1].loses;
         });
 
@@ -915,7 +978,9 @@
         document.getElementById('moneyRankingTableArea').innerHTML = mSorted.length ? mHtml + "</table>" : "<p style='text-align:center; font-size:12px; color:#aaa;'>기부 내역 없음</p>";
 
         // ★ 순위 변동 차트 그리기 실행 (여기 추가!)
-        drawTrendChart();
+        if (document.getElementById('rankLayer').style.display !== 'none') {
+            drawTrendChart();
+        }
     }
 
     // ★ 파라미터에 timeType 추가
@@ -1139,19 +1204,7 @@
         }
 
         // 자동 모드: 승률 계산 후 밸런스에 맞게 팀 자동 분배
-        let stats = {}; 
-        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        Object.values(db.matchHistory).forEach(m => {
-            if(!m.results) return;
-            m.lineups.forEach(l => {
-                const res = m.results[l.id]; if(!res) return;
-                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                lose.forEach(p => { if(stats[p]) stats[p].total++; });
-            });
-        });
-        const winRates = {};
-        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        const winRates = getWinRateMap(); // [V2.04 수정] 공통 승률 계산 사용 -CODEX
 
        let aPool = [], bPool = [];
         
@@ -1248,23 +1301,17 @@
         const selected = Array.from(document.querySelectorAll('input[name="player"]:checked')).map(c => c.value);
         const aPool = Array.from(document.querySelectorAll('input[name="manual_player"]:checked')).map(c => c.value);
         const bPool = selected.filter(p => !aPool.includes(p));
+
+        // [V2.04 수정] 한쪽 팀이 비어 있으면 대진 생성 중 오류가 나므로 먼저 막습니다 -CODEX
+        if (aPool.length === 0 || bPool.length === 0) {
+            alert("A팀과 B팀에 각각 최소 1명 이상 있어야 합니다.");
+            return;
+        }
         
         closeModal('manualTeamModal');
 
         // 매칭 페널티 계산을 위한 승률 통계
-        let stats = {}; 
-        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        Object.values(db.matchHistory).forEach(m => {
-            if(!m.results) return;
-            m.lineups.forEach(l => {
-                const res = m.results[l.id]; if(!res) return;
-                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                lose.forEach(p => { if(stats[p]) stats[p].total++; });
-            });
-        });
-        const winRates = {};
-        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        const winRates = getWinRateMap(); // [V2.04 수정] 공통 승률 계산 사용 -CODEX
 
         generateMatchups(aPool, bPool, selected, winRates);
     }
@@ -1326,16 +1373,24 @@
                     for (let b1 of bPool) for (let b2 of bPool) {
                         if (b1 === b2) continue;
                         const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
-                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
                         if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
                     }
                 }
             } else {
                 for (let pa of aPool) for (let pb of bPool) {
                     const pA = [pa], pB = [pb];
-                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
                     if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
                 }
+            }
+
+            // [V2.04 수정] 팀 인원 조건이 맞지 않아 대진을 만들 수 없는 경우를 안전하게 중단합니다 -CODEX
+            if (!bestMatch) {
+                alert("대진을 생성할 수 없습니다. 팀 인원 구성을 확인해주세요.");
+                currentMatchData = null;
+                document.getElementById('matchArea').style.display = 'none';
+                return;
             }
 
             const playersThisMatch = [...bestMatch.pA, ...bestMatch.pB];
@@ -1362,7 +1417,7 @@
         render();
     }
 
-    function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates) {
+    function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates, matchNo = null) {
         let penalty = 0;
         const currentAll = [...pA, ...pB];
         const avgA = pA.reduce((s, p) => s + winRates[p], 0) / pA.length;
@@ -1387,6 +1442,17 @@
             else if (consHist[p] === 1) penalty += 50; 
         });
 
+        // [V2.05 수정] 이경상은 가능하면 첫 경기와 연속 출전을 피하도록 큰 벌점을 추가합니다 -CODEX
+        if (currentAll.includes("이경상")) {
+            if (matchNo === 1) penalty += 12000;
+            if (consHist["이경상"] >= 1) penalty += 15000;
+        }
+
+        // [V2.06 수정] 이경상 단식 상대가 이명철이면 살짝 유리하게 보정해 확률만 높입니다 -CODEX
+        if (type === '단식' && currentAll.includes("이경상") && currentAll.includes("이명철")) {
+            penalty -= 180;
+        }
+
         return penalty + Math.random(); 
     }
 
@@ -1400,6 +1466,7 @@
 // ★ 선수의 최근 1개월 등수를 계산해주는 함수 (점심 랭킹만!)
     function invalidateRankCache() {
         lastMonthRankCache = null;
+        rankChartDirty = true; // [V2.04 수정] 데이터 변경 시 차트도 다시 그리도록 표시 -CODEX
     }
 
     function getLastMonthRankMap() {
@@ -1618,21 +1685,26 @@
     }
 
     async function saveToCloud(losers = []) {
-        if (isAlreadySaved || db.matchHistory[getCurrentKey()]) {
+        const key = getCurrentKey();
+
+        if (isAlreadySaved || db.matchHistory[key]) {
             if (!confirm("해당 회차에 이미 저장된 기록이 있습니다. 덮어씌우시겠습니까?")) return;
             if (!confirm("⚠️ 기존 데이터가 완전히 삭제되고 현재 결과로 대체됩니다. 정말 진행하시겠습니까?")) return;
         }
 
         document.getElementById('loading').style.display = 'flex';
-        db.matchHistory[getCurrentKey()] = currentMatchData;
+        db.matchHistory[key] = currentMatchData;
         invalidateRankCache();
         try { 
-            await saveDatabaseToCloud(); 
+            await saveDatabaseToCloud(key, currentMatchData); // [V2.04 수정] 경기 기록은 저장 후 클라우드 반영을 검증합니다 -CODEX
             alert("기록이 저장되었습니다."); 
             isAlreadySaved = true; 
             await syncWithCloud();
             handlePostSavePopups(losers);
-        } catch(e) { alert("저장 중 오류 발생"); } 
+        } catch(e) { 
+            console.error(e);
+            alert("저장 중 오류 발생 또는 저장 검증 실패"); 
+        } 
         finally { document.getElementById('loading').style.display = 'none'; }
     }
 
@@ -1722,6 +1794,7 @@
             document.getElementById('loading').style.display = 'flex';
             try {
                 await saveDatabaseToCloud();
+                invalidateRankCache();
                 alert("기부액이 성공적으로 저장되었습니다.");
             } catch(e) {
                 alert("저장 중 오류가 발생했습니다.");
@@ -1752,9 +1825,25 @@
     function handleManualSave() { 
         if (!checkAccess()) return; 
         if (!checkTimeRestriction()) return; // ★ 저장할 때도 시간 체크 추가!
+        if (!currentMatchData || !currentMatchData.lineups || currentMatchData.lineups.length === 0) {
+            alert("저장할 대진표가 없습니다.");
+            return;
+        }
+
+        // [V2.04 수정] 승패가 빠진 경기나 동점 상태는 패배팀 계산이 애매하므로 저장 전에 막습니다 -CODEX
+        const finishedCount = currentMatchData.lineups.filter(m => currentMatchData.results[m.id]).length;
+        if (finishedCount < currentMatchData.lineups.length) {
+            alert("아직 승패가 입력되지 않은 경기가 있습니다.");
+            return;
+        }
+
         if(confirm("최종 저장하시겠습니까?")) {
             let a=0, b=0;
             Object.values(currentMatchData.results).forEach(v=>(v==='A'?a++:(v==='B'?b++:0)));
+            if (a === b) {
+                alert("A팀과 B팀 승수가 같아 패배팀을 정할 수 없습니다.");
+                return;
+            }
             const loserList = (a >= b) ? currentMatchData.teams.b : currentMatchData.teams.a;
             saveToCloud(loserList); 
         } 
@@ -1804,19 +1893,7 @@
         closeModal('latecomerModal');
 
         // 1. 전체 승률 재계산 (새로 온 사람 실력 파악용)
-        let stats = {}; 
-        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        Object.values(db.matchHistory).forEach(m => {
-            if(!m.results) return;
-            m.lineups.forEach(l => {
-                const res = m.results[l.id]; if(!res) return;
-                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                lose.forEach(p => { if(stats[p]) stats[p].total++; });
-            });
-        });
-        const winRates = {};
-        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        const winRates = getWinRateMap(); // [V2.04 수정] 공통 승률 계산 사용 -CODEX
 
         // 2. 새로운 인원을 A팀 B팀에 조건에 맞게 분배
         let aPool = [...currentMatchData.teams.a];
@@ -1845,14 +1922,6 @@
 
 
        
-
-
-
-
-
-        // 팀 정보 업데이트
-        currentMatchData.teams.a = aPool;
-        currentMatchData.teams.b = bPool;
 
         // 3. 이미 끝난 경기에서 히스토리 추출 (연속 경기 방지, 복식 파트너 중복 방지 등을 위해)
         let oppPairHistory = [];     
@@ -1889,8 +1958,10 @@
         // 4. 아직 안 한 경기들만 새로운 인원풀로 재구성
         const mode = document.getElementById('gameMode').value;
         let newUnplayedMatchups = [];
+        let regenerationFailed = false;
 
         unplayedMatches.forEach(oldMatch => {
+            if (regenerationFailed) return;
             const i = oldMatch.id; // 기존 경기 번호 유지
             let isDoubles = (mode === 'doubles' || (mode === 'mixed' && i % 2 !== 0));
             if (aPool.length < 2 || bPool.length < 2) isDoubles = false;
@@ -1904,16 +1975,23 @@
                     for (let b1 of bPool) for (let b2 of bPool) {
                         if (b1 === b2) continue;
                         const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
-                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
                         if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
                     }
                 }
             } else {
                 for (let pa of aPool) for (let pb of bPool) {
                     const pA = [pa], pB = [pb];
-                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates);
+                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
                     if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
                 }
+            }
+
+            // [V2.04 수정] 추가 인원 반영 후에도 대진 생성 실패 시 기존 대진을 깨지 않도록 중단합니다 -CODEX
+            if (!bestMatch) {
+                alert("남은 대진을 재구성할 수 없습니다. 팀 인원 구성을 확인해주세요.");
+                regenerationFailed = true;
+                return;
             }
 
             // 히스토리 누적
@@ -1936,6 +2014,12 @@
 
             newUnplayedMatchups.push({ id: i, pA: bestMatch.pA, pB: bestMatch.pB, type: bestMatch.type, probA: probA });
         });
+
+        if (regenerationFailed) return;
+
+        // 팀 정보 업데이트
+        currentMatchData.teams.a = aPool;
+        currentMatchData.teams.b = bPool;
 
         // 5. 완료된 경기와 새로 짠 경기를 병합
         currentMatchData.lineups = [...playedMatches, ...newUnplayedMatchups].sort((a,b) => a.id - b.id);
@@ -1998,20 +2082,7 @@
         const nextId = currentMatchData.lineups.length + 1;
         
         // ★ 추가된 부분: 예상 승률 계산 로직 (과거 기록 바탕)
-        let stats = {}; 
-        fixedList.forEach(n => stats[n] = { win: 0, total: 0 });
-        Object.values(db.matchHistory).forEach(m => {
-            if(!m.results) return;
-            m.lineups.forEach(l => {
-                const res = m.results[l.id]; if(!res) return;
-                const win = res === 'A' ? l.pA : l.pB, lose = res === 'A' ? l.pB : l.pA;
-                win.forEach(p => { if(stats[p]) { stats[p].win++; stats[p].total++; } });
-                lose.forEach(p => { if(stats[p]) stats[p].total++; });
-            });
-        });
-        
-        const winRates = {};
-        fixedList.forEach(n => winRates[n] = (stats[n].total === 0) ? 0.5 : (stats[n].win / stats[n].total));
+        const winRates = getWinRateMap(); // [V2.04 수정] 공통 승률 계산 사용 -CODEX
 
         // 선택된 A팀, B팀 선수들의 평균 승률 계산
         const avgA = pA.reduce((s, p) => s + winRates[p], 0) / (pA.length || 1);
@@ -2054,6 +2125,8 @@
         const session = document.getElementById('matchSession').value; 
         const time = document.getElementById('matchTime').value;
 
+        mergeMoneyHistory(); // [V2.04 수정] 중복 기부 내역을 먼저 합산해 수정 대상을 하나로 맞춥니다 -CODEX
+
         // db에서 해당 데이터 찾아 수정
         let found = false;
         for (let i = 0; i < db.moneyHistory.length; i++) {
@@ -2076,6 +2149,7 @@
             document.getElementById('loading').style.display = 'flex';
             try {
                 await saveDatabaseToCloud();
+                invalidateRankCache();
                 alert("기부 내역이 성공적으로 수정되었습니다.");
                 updateUI(); // 랭킹 화면 데이터 갱신
                 render();   // 현재 점수판 화면 갱신
@@ -2149,6 +2223,7 @@
         document.getElementById('loading').style.display = 'flex';
         try {
             await saveDatabaseToCloud();
+            invalidateRankCache();
             alert(`${name}님의 기부금(${amount},000원)이 성공적으로 추가되었습니다.`);
             updateUI(); // 랭킹 화면 데이터 갱신
             render();   // 현재 점수판 기부금 리스트 화면 갱신
@@ -2167,7 +2242,12 @@
     let rankChartInstance = null; // 차트 객체 저장용 변수
 
     function drawTrendChart() {
-        if (!db.matchHistory || Object.keys(db.matchHistory).length === 0) return;
+        if (!rankChartDirty) return; // [V2.04 수정] 데이터 변경이 없으면 기존 차트를 유지합니다 -CODEX
+        if (!db.matchHistory || Object.keys(db.matchHistory).length === 0) {
+            document.getElementById('trendChartContainer').style.display = 'none';
+            rankChartDirty = false;
+            return;
+        }
 
         // 최근 28일 날짜 배열 구하기
         const days = 28;
@@ -2309,6 +2389,8 @@
 
             legendContainer.appendChild(item);
         });
+
+        rankChartDirty = false;
     }
 
 
