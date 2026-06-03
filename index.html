@@ -304,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V2.06</span>
+                <span class="version-tag-inline">V2.08</span>
             </div>
         </div>
 
@@ -1431,6 +1431,12 @@
 
         if (type === '복식') {
             penalty += partHist.filter(h => h === pA.join('|') || h === pB.join('|')).length * 2000;
+
+            // [V2.08 수정] 같은 복식조 바로 반복이 더 티나지 않도록 이경상 연속 출전보다 큰 벌점을 줍니다 -CODEX
+            const lastPartnerPairs = partHist.slice(-2);
+            if (lastPartnerPairs.includes(pA.join('|')) || lastPartnerPairs.includes(pB.join('|'))) {
+                penalty += 22000;
+            }
         }
 
         if (type === '단식') {
