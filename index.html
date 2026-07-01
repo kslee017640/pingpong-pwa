@@ -304,7 +304,7 @@
                 <div class="main-title-text" style="font-size: 45px !important;">
                     PING-PONG<br>DB PRO
                 </div>
-                <span class="version-tag-inline">V2.08</span>
+                <span class="version-tag-inline">V2.12</span>
             </div>
         </div>
 
@@ -1222,13 +1222,29 @@
         } else {
             const shuffled = [...selected].sort(() => Math.random() - 0.5);
             shuffled.forEach((p, i) => (i < shuffled.length / 2 ? aPool : bPool).push(p));
+
+            // [V2.11 수정] 운빨은 유지하되 이경상/이명철이 같은 편이면 낮은 확률로만 살짝 갈라줍니다 -CODEX
+            if (selected.includes("이경상") && selected.includes("이명철") && Math.random() < 0.3) {
+                const myTeam = aPool.includes("이경상") ? aPool : bPool;
+                const oppTeam = myTeam === aPool ? bPool : aPool;
+                if (myTeam.includes("이명철") && oppTeam.length > 0) {
+                    const swapCandidates = oppTeam.filter(p => p !== "이경상" && p !== "이명철");
+                    if (swapCandidates.length > 0) {
+                        const swapTarget = swapCandidates[Math.floor(Math.random() * swapCandidates.length)];
+                        myTeam.splice(myTeam.indexOf("이명철"), 1);
+                        myTeam.push(swapTarget);
+                        oppTeam.splice(oppTeam.indexOf(swapTarget), 1);
+                        oppTeam.push("이명철");
+                    }
+                }
+            }
         }
 
         // =========================================================
         // ★ 은밀한 이스터에그: 이경상 특별 조건 개입 로직 시작
         // =========================================================
-        // ★ 수정됨: 박빙(tight) 모드가 아닐 때(밸런스, 운빨)만 이스터에그 작동!
-        if (selected.includes("이경상") && currentBalanceMode !== 'tight') {
+        // [V2.10 수정] 운빨은 진짜 랜덤으로 두기 위해 이스터에그는 어중간 모드에서만 작동합니다 -CODEX
+        if (selected.includes("이경상") && currentBalanceMode === 'balance') {
             // 이경상이 속한 팀과 반대 팀 찾기
             let myTeam = aPool.includes("이경상") ? aPool : bPool;
             let oppTeam = myTeam === aPool ? bPool : aPool;
@@ -1260,7 +1276,6 @@
                 // 모드별 기본 확률 설정 (박빙 모드는 이스터에그가 안 도니까 제외)
                 let baseProb = 0.5;
                 if (currentBalanceMode === 'balance') baseProb = 0.65;
-                else if (currentBalanceMode === 'random') baseProb = 0.75;
                 
                 presentFriends.forEach((friend, idx) => {
                     // 친구가 반대 팀(oppTeam)에 있을 경우
@@ -1356,6 +1371,9 @@
         document.getElementById('nextGameBtn').style.display = 'none'; // 버튼 숨기기
         
         const mode = document.getElementById('gameMode').value;
+        const threeOnThreeDoublesRoundRobin = (mode === 'doubles' && wc === 3 && aPool.length === 3 && bPool.length === 3);
+        const penaltyContext = { avoidAllPartnerRepeats: threeOnThreeDoublesRoundRobin };
+        const usePureRandomMatchups = false; // [V2.12 수정] 운빨도 대진은 기존처럼 중복/연속 출전 회피 페널티를 적용합니다 -CODEX
         let oppPairHistory = []; let partnerPairHistory = []; 
         let singlesPlayCount = {}; selected.forEach(p => singlesPlayCount[p] = 0);
         let consecutiveCount = {}; selected.forEach(p => consecutiveCount[p] = 0);
@@ -1366,6 +1384,7 @@
 
             let bestMatch = null;
             let minPenalty = Infinity;
+            let randomCandidates = [];
 
             if (isDoubles) {
                 for (let a1 of aPool) for (let a2 of aPool) {
@@ -1373,16 +1392,28 @@
                     for (let b1 of bPool) for (let b2 of bPool) {
                         if (b1 === b2) continue;
                         const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
-                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
-                        if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                        if (usePureRandomMatchups) {
+                            randomCandidates.push({ pA, pB, type: '복식' });
+                        } else {
+                            let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i, penaltyContext);
+                            if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                        }
                     }
                 }
             } else {
                 for (let pa of aPool) for (let pb of bPool) {
                     const pA = [pa], pB = [pb];
-                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
-                    if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
+                    if (usePureRandomMatchups) {
+                        randomCandidates.push({ pA, pB, type: '단식' });
+                    } else {
+                        let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i, penaltyContext);
+                        if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
+                    }
                 }
+            }
+
+            if (usePureRandomMatchups && randomCandidates.length > 0) {
+                bestMatch = randomCandidates[Math.floor(Math.random() * randomCandidates.length)];
             }
 
             // [V2.04 수정] 팀 인원 조건이 맞지 않아 대진을 만들 수 없는 경우를 안전하게 중단합니다 -CODEX
@@ -1417,7 +1448,7 @@
         render();
     }
 
-    function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates, matchNo = null) {
+    function calculatePenalty(pA, pB, type, oppHist, partHist, singHist, consHist, winRates, matchNo = null, matchContext = {}) {
         let penalty = 0;
         const currentAll = [...pA, ...pB];
         const avgA = pA.reduce((s, p) => s + winRates[p], 0) / pA.length;
@@ -1436,6 +1467,11 @@
             const lastPartnerPairs = partHist.slice(-2);
             if (lastPartnerPairs.includes(pA.join('|')) || lastPartnerPairs.includes(pB.join('|'))) {
                 penalty += 22000;
+            }
+
+            // [V2.09 수정] 3:3 전부 복식 3판은 각 팀 3개 조합이 모두 한 번씩 나오도록 반복 조합에 매우 큰 벌점을 줍니다 -CODEX
+            if (matchContext.avoidAllPartnerRepeats && (partHist.includes(pA.join('|')) || partHist.includes(pB.join('|')))) {
+                penalty += 35000;
             }
         }
 
@@ -1670,6 +1706,16 @@
 
         let a = 0, b = 0, target = Math.ceil(currentMatchData.config.winCon / 2);
         Object.values(currentMatchData.results).forEach(v => (v === 'A' ? a++ : (v === 'B' ? b++ : 0)));
+        const playedCount = Object.values(currentMatchData.results).filter(v => v === 'A' || v === 'B').length;
+        const forceAllThreeDoubles = currentMatchData.config.winCon === 3 &&
+            currentMatchData.teams.a.length === 3 &&
+            currentMatchData.teams.b.length === 3 &&
+            currentMatchData.lineups.length === 3 &&
+            currentMatchData.lineups.every(m => m.type === '복식');
+
+        // [V2.09 수정] 3:3 전부 복식 3판은 2승이 먼저 나와도 3경기를 모두 기록하게 합니다 -CODEX
+        if (forceAllThreeDoubles && playedCount < currentMatchData.lineups.length) return;
+
         if (a >= target || b >= target) { 
             triggerConfetti();
             const winner = (a >= target) ? 'A팀' : 'B팀';
@@ -1963,6 +2009,9 @@
 
         // 4. 아직 안 한 경기들만 새로운 인원풀로 재구성
         const mode = document.getElementById('gameMode').value;
+        const threeOnThreeDoublesRoundRobin = (mode === 'doubles' && currentMatchData.config.winCon === 3 && aPool.length === 3 && bPool.length === 3);
+        const penaltyContext = { avoidAllPartnerRepeats: threeOnThreeDoublesRoundRobin };
+        const usePureRandomMatchups = false; // [V2.12 수정] 추가인원 후 남은 대진도 운빨이면 중복/연속 출전 회피 페널티를 적용합니다 -CODEX
         let newUnplayedMatchups = [];
         let regenerationFailed = false;
 
@@ -1974,6 +2023,7 @@
 
             let bestMatch = null;
             let minPenalty = Infinity;
+            let randomCandidates = [];
 
             if (isDoubles) {
                 for (let a1 of aPool) for (let a2 of aPool) {
@@ -1981,16 +2031,28 @@
                     for (let b1 of bPool) for (let b2 of bPool) {
                         if (b1 === b2) continue;
                         const pA = [a1, a2].sort(); const pB = [b1, b2].sort();
-                        let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
-                        if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                        if (usePureRandomMatchups) {
+                            randomCandidates.push({ pA, pB, type: '복식' });
+                        } else {
+                            let penalty = calculatePenalty(pA, pB, '복식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i, penaltyContext);
+                            if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '복식' }; }
+                        }
                     }
                 }
             } else {
                 for (let pa of aPool) for (let pb of bPool) {
                     const pA = [pa], pB = [pb];
-                    let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i);
-                    if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
+                    if (usePureRandomMatchups) {
+                        randomCandidates.push({ pA, pB, type: '단식' });
+                    } else {
+                        let penalty = calculatePenalty(pA, pB, '단식', oppPairHistory, partnerPairHistory, singlesPlayCount, consecutiveCount, winRates, i, penaltyContext);
+                        if (penalty < minPenalty) { minPenalty = penalty; bestMatch = { pA, pB, type: '단식' }; }
+                    }
                 }
+            }
+
+            if (usePureRandomMatchups && randomCandidates.length > 0) {
+                bestMatch = randomCandidates[Math.floor(Math.random() * randomCandidates.length)];
             }
 
             // [V2.04 수정] 추가 인원 반영 후에도 대진 생성 실패 시 기존 대진을 깨지 않도록 중단합니다 -CODEX
